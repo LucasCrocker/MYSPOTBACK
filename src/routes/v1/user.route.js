@@ -3,6 +3,7 @@ const auth = require('../../middlewares/auth');
 const validate = require('../../middlewares/validate');
 const userValidation = require('../../validations/user.validation');
 const userController = require('../../controllers/user.controller');
+const drivewayValidation = require('../../validations/driveway.validation');
 
 const router = express.Router();
 
@@ -11,6 +12,9 @@ router
   .post(auth('manageUsers'), validate(userValidation.createUser), userController.createUser)
   .get(auth('getUsers'), validate(userValidation.getUsers), userController.getUsers);
 
+router
+  .route('/register-driveway')
+  .post(auth('getUsers'), validate(drivewayValidation.registerDriveway), userController.addDrivewayToUser);
 router
   .route('/:userId')
   .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
