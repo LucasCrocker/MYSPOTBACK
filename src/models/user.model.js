@@ -6,6 +6,9 @@ const { roles } = require('../config/roles');
 
 const userSchema = mongoose.Schema(
   {
+    driveway: {
+      type: Object,
+    },
     name: {
       type: String,
       required: true,

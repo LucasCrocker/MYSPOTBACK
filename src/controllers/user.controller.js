@@ -30,8 +30,10 @@ const updateUser = catchAsync(async (req, res) => {
 });
 
 const addDrivewayToUser = catchAsync(async (req, res) => {
-  console.log("we're in");
-  const user = await userService.updateUserById(req.params.userId, req.body);
+  console.log("we're in", req.user);
+  console.log("the body", req.body);
+  const user = await userService.updateUserById(req.user._id, {driveway: req.body});
+  console.log("the corpse", user);
   res.send(user);
 });
 
