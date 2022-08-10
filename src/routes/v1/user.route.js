@@ -14,7 +14,7 @@ router
 
 router
   .route('/register-driveway')
-  .post(auth('getUsers'), validate(drivewayValidation.registerDriveway), userController.addDrivewayToUser);
+  .post(auth('blanket'), validate(drivewayValidation.registerDriveway), userController.addDrivewayToUser);
 router
   .route('/:userId')
   .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
