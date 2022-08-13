@@ -19,11 +19,22 @@ const registerDriveway = {
       }),
       description: Joi.string()
     }),
-    // name: Joi.string().required(),
+  }),
+};
+
+const getDriveways = {
+  body: Joi.object().keys({
+    location: Joi.object().keys({
+      location: Joi.object().keys({
+        lat: Joi.number(),
+        lng: Joi.number()
+      }),
+      description: Joi.string()
+    }),
   }),
 };
 
 module.exports = {
   registerDriveway,
-
+  getDriveways,
 };

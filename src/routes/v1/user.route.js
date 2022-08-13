@@ -15,6 +15,12 @@ router
 router
   .route('/register-driveway')
   .post(auth('blanket'), validate(drivewayValidation.registerDriveway), userController.addDrivewayToUser);
+
+  // get driveways (only POST so we can submit location info)
+router
+  .route('/driveways')
+  .post(auth('blanket'), validate(drivewayValidation.getDriveways), userController.getDriveways);
+
 router
   .route('/:userId')
   .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
