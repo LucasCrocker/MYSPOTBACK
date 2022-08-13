@@ -25,23 +25,16 @@ const getUser = catchAsync(async (req, res) => {
 });
 
 const getDriveways = catchAsync(async (req, res) => {
-  console.log("we're in", req.body);
-  // const filter = {'driveway.vacant': true }
-  const filter = { 
-    $and: [
-    {driveway: { $exists: true } },
-    {'driveway.vacant': true  },
-    // {"driveway.loc": {"$nearSphere": {"$geometry": {type: "Point", coordinates: [25.601198, 45.657976]}, "$maxDistance": 1000}}}
-    ]
-  };
-  // User.createIndex({point:"2dsphere"});
-  // const testResults = await User.find({
-  //   driveway: { $exists: true } ,
-  //   'driveway.vacant': true  ,
-  //   "driveway.loc": {"$nearSphere": {"$geometry": {type: "Point", coordinates: [req.body.location.location.lng, req.body.location.location.lat]}, "$maxDistance": 5000}}
-  // // }
-  // })
-  const testResults = await User.find(
+  // console.log("we're in", req.body);
+  // const filter = { 
+  //   $and: [
+  //   {driveway: { $exists: true } },
+  //   {'driveway.vacant': true  },
+  //   // {"driveway.loc": {"$nearSphere": {"$geometry": {type: "Point", coordinates: [25.601198, 45.657976]}, "$maxDistance": 1000}}}
+  //   ]
+  // };
+
+  const result = await User.find(
     {
       "driveway.loc": {
         $near: {
@@ -58,10 +51,9 @@ const getDriveways = catchAsync(async (req, res) => {
  
  
   // const filter = pick(req.query, ['name', 'role']);
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
-  const result = await userService.queryUsers(filter, options);
-  // console.log("query results", result);
-  console.log("query test results", testResults);
+  // const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  // const result = await userService.queryUsers(filter, options);
+
   res.send(result);
 });
 
