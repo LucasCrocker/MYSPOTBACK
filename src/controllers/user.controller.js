@@ -4,6 +4,7 @@ const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { userService } = require('../services');
 const { User } = require('../models');
+
 const createUser = catchAsync(async (req, res) => {
   const user = await userService.createUser(req.body);
   res.status(httpStatus.CREATED).send(user);
@@ -35,6 +36,7 @@ const getDriveways = catchAsync(async (req, res) => {
   // };
 
   const result = await User.find(
+    { $and: [
     {
       "driveway.loc": {
         $near: {
@@ -46,9 +48,11 @@ const getDriveways = catchAsync(async (req, res) => {
           $minDistance: 0
         }
       }
-   }
+   },
+   {'driveway.vacant': true  },
+  ]}
  )
- 
+ console.log("result: ", result);
  
   // const filter = pick(req.query, ['name', 'role']);
   // const options = pick(req.query, ['sortBy', 'limit', 'page']);
@@ -73,6 +77,36 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
   res.send(user);
 });
 
+const bookDriveway = catchAsync(async (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+  const result = await User.findOne(
+    { $and: [
+    {
+      "driveway.loc": {
+        $near: {
+          $geometry: {
+             type: "Point" ,
+             coordinates: [req.body.location.location.lng, req.body.location.location.lat]
+          },
+          $maxDistance: 1000,
+          $minDistance: 0
+        }
+      },
+   },
+   {"driveway.location.description": req.body.location.description},
+  ]}
+ )
+ 
+  result.driveway.vacant = false;
+  result.driveway.bookedBy = {
+    user: req.user.email,
+    lastModified: new Date()
+  }
+
+  const user = await userService.updateUserById(req.user._id, {driveway: result.driveway});
+  res.send(user);
+});
+
 const deleteUser = catchAsync(async (req, res) => {
   await userService.deleteUserById(req.params.userId);
   res.status(httpStatus.NO_CONTENT).send();
@@ -86,4 +120,5 @@ module.exports = {
   updateUser,
   addDrivewayToUser,
   deleteUser,
+  bookDriveway
 };
