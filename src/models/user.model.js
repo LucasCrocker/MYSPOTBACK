@@ -9,6 +9,9 @@ const userSchema = mongoose.Schema(
     driveway: {
       type: Object,
     },
+    booked: {
+      type: Object,
+    },
     name: {
       type: String,
       required: true,

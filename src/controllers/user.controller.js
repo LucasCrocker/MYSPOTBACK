@@ -103,7 +103,13 @@ const bookDriveway = catchAsync(async (req, res) => {
     lastModified: new Date()
   }
 
-  const user = await userService.updateUserById(req.user._id, {driveway: result.driveway});
+
+  let bookedDriveway = {
+    emailOfDriveway: result.email,
+    lastModified: new Date()
+  }
+  const userBookingDrivewayResult = await userService.updateUserById(req.user._id, {booked: bookedDriveway});
+  const user = await userService.updateUserById(result._id, {driveway: result.driveway});
   res.send(user);
 });
 
