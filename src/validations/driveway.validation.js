@@ -21,6 +21,8 @@ const registerDriveway = {
     }),
   }),
 };
+const getBookingStatus = {
+};
 
 const getDriveways = {
   body: Joi.object().keys({
@@ -37,4 +39,5 @@ const getDriveways = {
 module.exports = {
   registerDriveway,
   getDriveways,
+  getBookingStatus
 };

@@ -25,6 +25,16 @@ const getUser = catchAsync(async (req, res) => {
   res.send(user);
 });
 
+const getBookingStatus = catchAsync(async (req, res) => {
+  //get timestamp and location of driveway your renting
+  const bookedDrivewayResult = await User.find({'driveway.bookedDriveway.user': req.user.email}, {'driveway.bookedBy.user.lastModified': 1, 'driveway.location': 1})
+  //get timestamp of your driveway
+  const yourDrivewayResult = await User.find({'email': req.user.email}, {'driveway.bookedBy': 1})
+
+
+return { booked: bookedDrivewayResult, driveway: yourDrivewayResult};
+})
+
 const getDriveways = catchAsync(async (req, res) => {
   // console.log("we're in", req.body);
   // const filter = { 
@@ -126,5 +136,6 @@ module.exports = {
   updateUser,
   addDrivewayToUser,
   deleteUser,
-  bookDriveway
+  bookDriveway,
+  getBookingStatus
 };
