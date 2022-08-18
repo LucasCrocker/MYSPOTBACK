@@ -27,9 +27,9 @@ const getUser = catchAsync(async (req, res) => {
 
 const getBookingStatus = catchAsync(async (req, res) => {
   //get timestamp and location of driveway your renting
-  const bookedDrivewayResult = await User.find({'driveway.bookedDriveway.user': req.user.email}, {'driveway.bookedBy.user.lastModified': 1, 'driveway.location': 1})
+  const bookedDrivewayResult = await User.find({'driveway.bookedDriveway.user': req.user._id}, {'driveway.bookedBy.user.lastModified': 1, 'driveway.location': 1})
   //get timestamp of your driveway
-  const yourDrivewayResult = await User.find({'email': req.user.email}, {'driveway.bookedBy': 1})
+  const yourDrivewayResult = await User.find({'email': req.user._id}, {'driveway.bookedBy': 1})
 
 
 return { booked: bookedDrivewayResult, driveway: yourDrivewayResult};
