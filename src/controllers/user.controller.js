@@ -30,7 +30,7 @@ const getBookingStatus = catchAsync(async (req, res) => {
   const bookedDrivewayResult = await User.find({'driveway.bookedDriveway.user': req.user._id}, {'driveway.bookedBy.user.lastModified': 1, 'driveway.location': 1})
   //get timestamp of your driveway
   const yourDrivewayResult = await User.find({'email': req.user._id}, {'driveway.bookedBy': 1})
-
+  
 
 return { booked: bookedDrivewayResult, driveway: yourDrivewayResult};
 })
@@ -116,11 +116,12 @@ const bookDriveway = catchAsync(async (req, res) => {
 
   let bookedDriveway = {
     emailOfDriveway: result.email,
-    lastModified: new Date()
+    lastModified: new Date(),
+    driveway: result.driveway.location
   }
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, {booked: bookedDriveway});
   const user = await userService.updateUserById(result._id, {driveway: result.driveway});
-  res.send(user);
+  res.send(userBookingDrivewayResult);
 });
 
 const deleteUser = catchAsync(async (req, res) => {
