@@ -16,6 +16,10 @@ router
   .route('/register-driveway')
   .post(auth('blanket'), validate(drivewayValidation.registerDriveway), userController.addDrivewayToUser);
 
+// router
+//   .route('/booking-status')
+//   .get(auth('blanket'), validate(drivewayValidation.getBookingStatus), userController.getBookingStatus);
+
   // get driveways (only POST so we can submit location info)
 router
   .route('/driveways')

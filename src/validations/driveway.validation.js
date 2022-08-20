@@ -21,6 +21,8 @@ const registerDriveway = {
     }),
   }),
 };
+const getBookingStatus = {
+};
 
 const getDriveways = {
   body: Joi.object().keys({
