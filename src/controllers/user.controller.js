@@ -25,15 +25,15 @@ const getUser = catchAsync(async (req, res) => {
   res.send(user);
 });
 
-const getBookingStatus = catchAsync(async (req, res) => {
-  //get timestamp and location of driveway your renting
-  const bookedDrivewayResult = await User.find({'driveway.bookedDriveway.user': req.user._id}, {'driveway.bookedBy.user.lastModified': 1, 'driveway.location': 1})
-  //get timestamp of your driveway
-  const yourDrivewayResult = await User.find({'email': req.user._id}, {'driveway.bookedBy': 1})
+// const getBookingStatus = catchAsync(async (req, res) => {
+//   //get timestamp and location of driveway your renting
+//   const bookedDrivewayResult = await User.find({'driveway.bookedDriveway.user': req.user._id}, {'driveway.bookedBy.user.lastModified': 1, 'driveway.location': 1})
+//   //get timestamp of your driveway
+//   const yourDrivewayResult = await User.find({'email': req.user._id}, {'driveway.bookedBy': 1})
   
 
-return { booked: bookedDrivewayResult, driveway: yourDrivewayResult};
-})
+// return { booked: bookedDrivewayResult, driveway: yourDrivewayResult};
+// })
 
 const getDriveways = catchAsync(async (req, res) => {
   // console.log("we're in", req.body);
@@ -60,7 +60,8 @@ const getDriveways = catchAsync(async (req, res) => {
       }
    },
    {'driveway.vacant': true  },
-  ]}
+  ]},
+  {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1 }
  )
  console.log("result: ", result);
  
@@ -89,27 +90,29 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
 
 const bookDriveway = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
+  console.log("In user controller");
+  console.log(req);
   const result = await User.findOne(
     { $and: [
-    {
-      "driveway.loc": {
-        $near: {
-          $geometry: {
-             type: "Point" ,
-             coordinates: [req.body.location.location.lng, req.body.location.location.lat]
-          },
-          $maxDistance: 1000,
-          $minDistance: 0
-        }
-      },
-   },
-   {"driveway.location.description": req.body.location.description},
+  //   {
+  //     "driveway.loc": {
+  //       $near: {
+  //         $geometry: {
+  //            type: "Point" ,
+  //            coordinates: [req.body.location.location.lng, req.body.location.location.lat]
+  //         },
+  //         $maxDistance: 1000,
+  //         $minDistance: 0
+  //       }
+  //     },
+  //  },
+   {"_id": ObjectId(req.body.location.id)},
   ]}
  )
- 
+ console.log("result is:", result);
   result.driveway.vacant = false;
   result.driveway.bookedBy = {
-    user: req.user.email,
+    user: req.user._id,
     lastModified: new Date()
   }
 
@@ -138,5 +141,5 @@ module.exports = {
   addDrivewayToUser,
   deleteUser,
   bookDriveway,
-  getBookingStatus
+  // getBookingStatus
 };

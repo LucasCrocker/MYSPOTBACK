@@ -16,9 +16,9 @@ router
   .route('/register-driveway')
   .post(auth('blanket'), validate(drivewayValidation.registerDriveway), userController.addDrivewayToUser);
 
-router
-  .route('/booking-status')
-  .get(auth('blanket'), validate(drivewayValidation.getBookingStatus), userController.getBookingStatus);
+// router
+//   .route('/booking-status')
+//   .get(auth('blanket'), validate(drivewayValidation.getBookingStatus), userController.getBookingStatus);
 
   // get driveways (only POST so we can submit location info)
 router
@@ -27,7 +27,7 @@ router
 
 router
   .route('/book-driveway')
-  .post(auth('blanket'), validate(drivewayValidation.getDriveways), userController.bookDriveway);
+  .post(auth('blanket'), validate(drivewayValidation.bookDriveway), userController.bookDriveway);
 
 router
   .route('/:userId')

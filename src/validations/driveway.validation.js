@@ -36,8 +36,21 @@ const getDriveways = {
   }),
 };
 
+const bookDriveway = {
+  body: Joi.object().keys({
+    location: Joi.object().keys({
+      location: Joi.object().keys({
+        lat: Joi.number(),
+        lng: Joi.number()
+      }),
+      description: Joi.string(),
+      id: Joi.string().hex().length(24)
+    }),
+  }),
+};
+
 module.exports = {
   registerDriveway,
   getDriveways,
-  getBookingStatus
+  bookDriveway
 };
