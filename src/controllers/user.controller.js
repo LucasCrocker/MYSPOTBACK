@@ -50,7 +50,8 @@ const getDriveways = catchAsync(async (req, res) => {
       }
    },
    {'driveway.vacant': true  },
-  ]}
+  ]},
+  {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1 }
  )
  console.log("result: ", result);
  
@@ -79,27 +80,29 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
 
 const bookDriveway = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
+  console.log("In user controller");
+  console.log(req);
   const result = await User.findOne(
     { $and: [
-    {
-      "driveway.loc": {
-        $near: {
-          $geometry: {
-             type: "Point" ,
-             coordinates: [req.body.location.location.lng, req.body.location.location.lat]
-          },
-          $maxDistance: 1000,
-          $minDistance: 0
-        }
-      },
-   },
-   {"driveway.location.description": req.body.location.description},
+  //   {
+  //     "driveway.loc": {
+  //       $near: {
+  //         $geometry: {
+  //            type: "Point" ,
+  //            coordinates: [req.body.location.location.lng, req.body.location.location.lat]
+  //         },
+  //         $maxDistance: 1000,
+  //         $minDistance: 0
+  //       }
+  //     },
+  //  },
+   {"_id": ObjectId(req.body.location.id)},
   ]}
  )
- 
+ console.log("result is:", result);
   result.driveway.vacant = false;
   result.driveway.bookedBy = {
-    user: req.user.email,
+    user: req.user._id,
     lastModified: new Date()
   }
 

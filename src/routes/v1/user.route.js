@@ -23,7 +23,7 @@ router
 
 router
   .route('/book-driveway')
-  .post(auth('blanket'), validate(drivewayValidation.getDriveways), userController.bookDriveway);
+  .post(auth('blanket'), validate(drivewayValidation.bookDriveway), userController.bookDriveway);
 
 router
   .route('/:userId')
