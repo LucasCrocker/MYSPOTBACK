@@ -30,6 +30,10 @@ router
   .post(auth('blanket'), validate(drivewayValidation.bookDriveway), userController.bookDriveway);
 
 router
+  .route('/release-driveway')
+  .get(auth('blanket'), userController.releaseDriveway);
+
+router
   .route('/:userId')
   .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
   .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)

@@ -118,12 +118,30 @@ const bookDriveway = catchAsync(async (req, res) => {
 
 
   let bookedDriveway = {
-    emailOfDriveway: result._id,
+    idOfDriveway: result._id,
     lastModified: new Date(),
     driveway: result.driveway.location
   }
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, {booked: bookedDriveway});
   const user = await userService.updateUserById(result._id, {driveway: result.driveway});
+  res.send(userBookingDrivewayResult);
+});
+
+const releaseDriveway = catchAsync(async (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+
+  let userBookingDriveway = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  )
+  let drivewayOwner = await User.findOne(
+    {"_id": ObjectId(req.user.booked.idOfDriveway)},
+  )
+  delete userBookingDriveway['booked'];
+  delete drivewayOwner.driveway['bookedBy'];
+  drivewayOwner.driveway['vacant'] = true;
+
+  const userBookingDrivewayResult = await userService.updateUserById(req.user._id, userBookingDriveway);
+  const userResult = await userService.updateUserById(drivewayOwner._id, drivewayOwner);
   res.send(userBookingDrivewayResult);
 });
 
@@ -141,5 +159,5 @@ module.exports = {
   addDrivewayToUser,
   deleteUser,
   bookDriveway,
-  // getBookingStatus
+  releaseDriveway,
 };
