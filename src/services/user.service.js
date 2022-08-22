@@ -62,7 +62,7 @@ const updateUserById = async (userId, updateBody) => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
   }
   Object.assign(user, updateBody);
-  console.log("USER BEING SAVED: ", user);
+  // console.log("USER BEING SAVED: ", user);
   await user.save();
   return user;
 };
