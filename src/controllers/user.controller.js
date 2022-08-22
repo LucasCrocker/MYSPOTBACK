@@ -124,24 +124,28 @@ const bookDriveway = catchAsync(async (req, res) => {
   }
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, {booked: bookedDriveway});
   const user = await userService.updateUserById(result._id, {driveway: result.driveway});
+  console.log("here it is m8: ", userBookingDrivewayResult);
   res.send(userBookingDrivewayResult);
 });
 
 const releaseDriveway = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
+  // console.log("Release driveway request: ", req);
+  let drivewayOwner = await User.findOne(
+    {"_id": ObjectId(req.user.booked.idOfDriveway)},
+    )
 
+  drivewayOwner.driveway.bookedBy = null;
+  drivewayOwner.driveway.vacant = true;
+  const userResult = await userService.updateUserById(req.user.booked.idOfDriveway, drivewayOwner);
+    
   let userBookingDriveway = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
-  let drivewayOwner = await User.findOne(
-    {"_id": ObjectId(req.user.booked.idOfDriveway)},
-  )
-  delete userBookingDriveway['booked'];
-  delete drivewayOwner.driveway['bookedBy'];
-  drivewayOwner.driveway['vacant'] = true;
-
+  userBookingDriveway.booked = null;
+  // console.log("Updated users:", userBookingDriveway, drivewayOwner, userResult);
+  
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, userBookingDriveway);
-  const userResult = await userService.updateUserById(drivewayOwner._id, drivewayOwner);
   res.send(userBookingDrivewayResult);
 });
 
