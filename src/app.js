@@ -53,6 +53,34 @@ if (config.env === 'production') {
 // v1 api routes
 app.use('/v1', routes);
 
+const stripe = require('stripe')('sk_test_Hrs6SAopgFPF0bZXSN3f6ELN');
+// This example sets up an endpoint using the Express framework.
+// Watch this video to get started: https://youtu.be/rPR2aJ6XnAc.
+
+app.post('/payment-sheet', async (req, res) => {
+  // Use an existing Customer ID if this is a returning customer.
+  const customer = await stripe.customers.create();
+  const ephemeralKey = await stripe.ephemeralKeys.create(
+    {customer: customer.id},
+    {apiVersion: '2022-08-01'}
+  );
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: 1099,
+    currency: 'eur',
+    customer: customer.id,
+    automatic_payment_methods: {
+      enabled: true,
+    },
+  });
+
+  res.json({
+    paymentIntent: paymentIntent.client_secret,
+    ephemeralKey: ephemeralKey.secret,
+    customer: customer.id,
+    publishableKey: 'pk_test_51LZlAiBPaG0NtDBCN9LceoWeCkacRMmrY3EQcNtJCEcjrWGnzJudSd0fH97NGAiFFSzXaDG0OkrzWTno0ppcU84n007mQUmu3b'
+  });
+});
+
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {
   next(new ApiError(httpStatus.NOT_FOUND, 'Not found'));
