@@ -152,6 +152,21 @@ const deleteUser = catchAsync(async (req, res) => {
   res.status(httpStatus.NO_CONTENT).send();
 });
 
+const deleteDriveway = catchAsync(async (req, res) => {
+  console.log('in deleteDriveway');
+  const ObjectId = require('mongodb').ObjectId;
+  let drivewayOwner = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+    )
+
+  if (drivewayOwner.driveway.bookedBy) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Driveway is currently booked.');
+  } else {
+    drivewayOwner.driveway = null;
+    const userResult = await userService.updateUserById(req.user._id, {driveway: drivewayOwner.driveway});
+    res.send(userResult);
+  }
+});
 module.exports = {
   createUser,
   getUsers,
@@ -162,4 +177,5 @@ module.exports = {
   deleteUser,
   bookDriveway,
   releaseDriveway,
+  deleteDriveway,
 };

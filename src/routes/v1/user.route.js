@@ -34,6 +34,10 @@ router
   .get(auth('blanket'), userController.releaseDriveway);
 
 router
+  .route('/delete-driveway')
+  .get(auth('blanket'), userController.deleteDriveway);
+
+router
   .route('/:userId')
   .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
   .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
