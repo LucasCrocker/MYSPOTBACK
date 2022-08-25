@@ -34,6 +34,14 @@ router
   .get(auth('blanket'), userController.releaseDriveway);
 
 router
+  .route('/set-payment-intent')
+  .post(auth('blanket'), userController.setPaymentIntent);
+
+router
+  .route('/process-payment-intent')
+  .post(auth('blanket'), userController.processPaymentIntent);
+
+router
   .route('/:userId')
   .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
   .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)

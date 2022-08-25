@@ -4,8 +4,73 @@ const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { userService } = require('../services');
 const { User } = require('../models');
+// Set your secret key. Remember to switch to your live secret key in production.
+// See your keys here: https://dashboard.stripe.com/apikeys
+const stripe = require('stripe')('sk_test_51LZlAiBPaG0NtDBCYaZFxWwYX9HwjdH86FW69v12OUcABN57tYriwJtfiZVLoUQOhPsHf5hnIkUwA9ZNPqbOMtyv00cwMjjDC5');
+
+const processPaymentIntent = catchAsync(async (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+
+  let user = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  )
+  const paymentMethods = await stripe.paymentMethods.list({
+    customer: user.customer.id,
+    type: 'card',
+  });
+  console.log("paymentMethods", paymentMethods);
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: 1099,
+      currency: 'cad',
+      customer: user.customer.id,
+      payment_method: card,
+      // payment_method: paymentMethods[0].id,
+      off_session: true,
+      confirm: true,
+    });
+    const clientSecret = paymentIntent.client_secret;
+    res.send(clientSecret);
+  } catch (err) {
+    // Error code will be authentication_required if authentication is needed
+    console.log('Error code is: ', err.code);
+    // const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
+    // console.log('PI retrieved: ', paymentIntentRetrieved.id);
+  }
+});
+
+// create the payment intent for a given user
+const setPaymentIntent = catchAsync(async (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+
+  let user = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  )
+  // const setupIntent = await stripe.setupIntents.create({
+  //   customer: user.customer.id,
+  // });
+  // const paymentMethods = await stripe.paymentMethods.list({
+  //   customer: user.customer.id,
+  //   type: 'card',
+  // });
+
+  // console.log("paymentMethods on setPaymentIntent: ", paymentMethods, user.customer.id);
+  // const clientSecret = setupIntent.client_secret;
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: 1099, //lowest denomination of particular currency
+    currency: "usd",
+    payment_method_types: ["card"], //by default
+  });
+
+  const clientSecret = paymentIntent.client_secret;
+  console.log("client secret is: ", clientSecret)
+  res.send(clientSecret);
+});
 
 const createUser = catchAsync(async (req, res) => {
+  const customer = await stripe.customers.create();
+  req.body.customer = customer;
+  console.log("customer: ", customer);
   const user = await userService.createUser(req.body);
   res.status(httpStatus.CREATED).send(user);
 });
@@ -162,4 +227,6 @@ module.exports = {
   deleteUser,
   bookDriveway,
   releaseDriveway,
+  setPaymentIntent,
+  processPaymentIntent
 };
