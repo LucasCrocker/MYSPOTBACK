@@ -19,8 +19,8 @@ const checkForPaymentMethod = catchAsync(async (req, res) => {
       customer: customer.id,
       type: 'card',
     });
-    console.log("Payment methods: ", paymentMethods);
-    console.log("Payment methods (paymentMethods.data.length > 0): ", (paymentMethods.data.length > 0));
+    // console.log("Payment methods: ", paymentMethods);
+    // console.log("Payment methods (paymentMethods.data.length > 0): ", (paymentMethods.data.length > 0));
     res.send(paymentMethods.data.length > 0);
 });
 const testPaymentSheet = catchAsync(async (req, res) => {
@@ -236,22 +236,22 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
 
 const bookDriveway = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
-  // console.log("In user controller");
-  // console.log(req);
+
+ 
+  let userCheck = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  )
+    let customer = userCheck.customer;
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: customer.id,
+      type: 'card',
+    }); 
+    if (paymentMethods.data.length > 0) {
+      throw new ApiError(httpStatus.BAD_REQUEST, 'No payment methods present');
+    }
+
   const result = await User.findOne(
     { $and: [
-  //   {
-  //     "driveway.loc": {
-  //       $near: {
-  //         $geometry: {
-  //            type: "Point" ,
-  //            coordinates: [req.body.location.location.lng, req.body.location.location.lat]
-  //         },
-  //         $maxDistance: 1000,
-  //         $minDistance: 0
-  //       }
-  //     },
-  //  },
    {"_id": ObjectId(req.body.location.id)},
   ]}
  )
