@@ -8,6 +8,21 @@ const { User } = require('../models');
 // See your keys here: https://dashboard.stripe.com/apikeys
 const stripe = require('stripe')('sk_test_51LZlAiBPaG0NtDBCYaZFxWwYX9HwjdH86FW69v12OUcABN57tYriwJtfiZVLoUQOhPsHf5hnIkUwA9ZNPqbOMtyv00cwMjjDC5');
 
+const checkForPaymentMethod = catchAsync(async (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+
+  let user = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  )
+    let customer = user.customer;
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: customer.id,
+      type: 'card',
+    });
+    console.log("Payment methods: ", paymentMethods);
+    console.log("Payment methods (paymentMethods.data.length > 0): ", (paymentMethods.data.length > 0));
+    res.send(paymentMethods.data.length > 0);
+});
 const testPaymentSheet = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
 
@@ -221,8 +236,8 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
 
 const bookDriveway = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
-  console.log("In user controller");
-  console.log(req);
+  // console.log("In user controller");
+  // console.log(req);
   const result = await User.findOne(
     { $and: [
   //   {
@@ -240,7 +255,7 @@ const bookDriveway = catchAsync(async (req, res) => {
    {"_id": ObjectId(req.body.location.id)},
   ]}
  )
- console.log("result is:", result);
+//  console.log("result is:", result);
   result.driveway.vacant = false;
   result.driveway.bookedBy = {
     user: req.user._id,
@@ -255,7 +270,7 @@ const bookDriveway = catchAsync(async (req, res) => {
   }
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, {booked: bookedDriveway});
   const user = await userService.updateUserById(result._id, {driveway: result.driveway});
-  console.log("here it is m8: ", userBookingDrivewayResult);
+  // console.log("here it is m8: ", userBookingDrivewayResult);
   res.send(userBookingDrivewayResult);
 });
 
@@ -313,4 +328,5 @@ module.exports = {
   paymentSheet,
   testPaymentSheet,
   deleteDriveway,
+  checkForPaymentMethod
 };

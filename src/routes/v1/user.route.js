@@ -48,6 +48,11 @@ router
 router
   .route('/test-payment-sheet')
   .post(auth('blanket'), userController.testPaymentSheet);
+
+router
+  .route('/check-for-payment-method')
+  .post(auth('blanket'), userController.checkForPaymentMethod);
+
 router
   .route('/delete-driveway')
   .get(auth('blanket'), userController.deleteDriveway);
