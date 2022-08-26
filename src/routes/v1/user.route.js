@@ -48,6 +48,9 @@ router
 router
   .route('/test-payment-sheet')
   .post(auth('blanket'), userController.testPaymentSheet);
+router
+  .route('/delete-driveway')
+  .get(auth('blanket'), userController.deleteDriveway);
 
 router
   .route('/:userId')
