@@ -8,6 +8,72 @@ const { User } = require('../models');
 // See your keys here: https://dashboard.stripe.com/apikeys
 const stripe = require('stripe')('sk_test_51LZlAiBPaG0NtDBCYaZFxWwYX9HwjdH86FW69v12OUcABN57tYriwJtfiZVLoUQOhPsHf5hnIkUwA9ZNPqbOMtyv00cwMjjDC5');
 
+const testPaymentSheet = catchAsync(async (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+
+  let user = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  )
+    let customer = user.customer;
+    const paymentMethods = await stripe.paymentMethods.list({
+      customer: customer.id,
+      type: 'card',
+    });
+    console.log("Payment methods: ", paymentMethods);
+    console.log("PaymentMethods.data[0].id: ", paymentMethods.data[0].id);
+
+try {
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: 1199,
+    currency: 'usd',
+    customer: customer.id,
+    payment_method: paymentMethods.data[0].id,
+    off_session: true,
+    confirm: true,
+  });
+  res.send(paymentIntent);
+} catch (err) {
+  // Error code will be authentication_required if authentication is needed
+  console.log('Error code is: ', err.code);
+  const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
+  console.log('PI retrieved: ', paymentIntentRetrieved.id);
+  throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
+}
+});
+
+const paymentSheet = catchAsync(async (req, res) => {
+  // Use an existing Customer ID if this is a returning customer.
+  // const customer = await stripe.customers.create();
+  const ObjectId = require('mongodb').ObjectId;
+
+  let user = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  )
+  let customer = user.customer;
+  console.log("flag 1");
+  const ephemeralKey = await stripe.ephemeralKeys.create(
+    {customer: customer.id},
+    {apiVersion: '2022-08-01'}
+  );
+  console.log("flag 2");
+  const setupIntent = await stripe.setupIntents.create({
+    customer: customer.id,
+  });
+  console.log("flag 3")
+  // res.json({
+  //   setupIntent: setupIntent.client_secret,
+  //   ephemeralKey: ephemeralKey.secret,
+  //   customer: customer.id,
+  //   publishableKey: 'pk_test_A7jK4iCYHL045qgjjfzAfPxu'
+  // })
+  res.send({
+    setupIntent: setupIntent.client_secret,
+    ephemeralKey: ephemeralKey.secret,
+    customer: customer.id,
+    publishableKey: 'pk_test_51LZlAiBPaG0NtDBCN9LceoWeCkacRMmrY3EQcNtJCEcjrWGnzJudSd0fH97NGAiFFSzXaDG0OkrzWTno0ppcU84n007mQUmu3b'
+  })
+});
+
 const processPaymentIntent = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
 
@@ -228,5 +294,7 @@ module.exports = {
   bookDriveway,
   releaseDriveway,
   setPaymentIntent,
-  processPaymentIntent
+  processPaymentIntent,
+  paymentSheet,
+  testPaymentSheet
 };
