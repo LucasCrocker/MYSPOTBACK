@@ -19,8 +19,7 @@ const checkForPaymentMethod = catchAsync(async (req, res) => {
       customer: customer.id,
       type: 'card',
     });
-    // console.log("Payment methods: ", paymentMethods);
-    // console.log("Payment methods (paymentMethods.data.length > 0): ", (paymentMethods.data.length > 0));
+
     res.send(paymentMethods.data.length > 0);
 });
 const testPaymentSheet = catchAsync(async (req, res) => {
@@ -37,28 +36,27 @@ const testPaymentSheet = catchAsync(async (req, res) => {
     console.log("Payment methods: ", paymentMethods);
     console.log("PaymentMethods.data[0].id: ", paymentMethods.data[0].id);
 
-try {
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: 1199,
-    currency: 'usd',
-    customer: customer.id,
-    payment_method: paymentMethods.data[0].id,
-    off_session: true,
-    confirm: true,
-  });
-  res.send(paymentIntent);
-} catch (err) {
-  // Error code will be authentication_required if authentication is needed
-  console.log('Error code is: ', err.code);
-  const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
-  console.log('PI retrieved: ', paymentIntentRetrieved.id);
-  throw new ApiError(httpStatus.BAD_REQUEST, 'Email already taken');
-}
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: 1199,
+      currency: 'usd',
+      customer: customer.id,
+      payment_method: paymentMethods.data[0].id,
+      off_session: true,
+      confirm: true,
+    });
+    res.send(paymentIntent);
+  } catch (err) {
+    // Error code will be authentication_required if authentication is needed
+    console.log('Error code is: ', err.code);
+    const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
+    console.log('PI retrieved: ', paymentIntentRetrieved.id);
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Payment failed - please contact administrator');
+  }
 });
 
 const paymentSheet = catchAsync(async (req, res) => {
-  // Use an existing Customer ID if this is a returning customer.
-  // const customer = await stripe.customers.create();
+
   const ObjectId = require('mongodb').ObjectId;
 
   let user = await User.findOne(
@@ -75,12 +73,7 @@ const paymentSheet = catchAsync(async (req, res) => {
     customer: customer.id,
   });
   console.log("flag 3")
-  // res.json({
-  //   setupIntent: setupIntent.client_secret,
-  //   ephemeralKey: ephemeralKey.secret,
-  //   customer: customer.id,
-  //   publishableKey: 'pk_test_A7jK4iCYHL045qgjjfzAfPxu'
-  // })
+
   res.send({
     setupIntent: setupIntent.client_secret,
     ephemeralKey: ephemeralKey.secret,
@@ -113,10 +106,8 @@ const processPaymentIntent = catchAsync(async (req, res) => {
     const clientSecret = paymentIntent.client_secret;
     res.send(clientSecret);
   } catch (err) {
-    // Error code will be authentication_required if authentication is needed
     console.log('Error code is: ', err.code);
-    // const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
-    // console.log('PI retrieved: ', paymentIntentRetrieved.id);
+
   }
 });
 
@@ -127,16 +118,7 @@ const setPaymentIntent = catchAsync(async (req, res) => {
   let user = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
-  // const setupIntent = await stripe.setupIntents.create({
-  //   customer: user.customer.id,
-  // });
-  // const paymentMethods = await stripe.paymentMethods.list({
-  //   customer: user.customer.id,
-  //   type: 'card',
-  // });
 
-  // console.log("paymentMethods on setPaymentIntent: ", paymentMethods, user.customer.id);
-  // const clientSecret = setupIntent.client_secret;
   const paymentIntent = await stripe.paymentIntents.create({
     amount: 1099, //lowest denomination of particular currency
     currency: "usd",
@@ -171,25 +153,8 @@ const getUser = catchAsync(async (req, res) => {
   res.send(user);
 });
 
-// const getBookingStatus = catchAsync(async (req, res) => {
-//   //get timestamp and location of driveway your renting
-//   const bookedDrivewayResult = await User.find({'driveway.bookedDriveway.user': req.user._id}, {'driveway.bookedBy.user.lastModified': 1, 'driveway.location': 1})
-//   //get timestamp of your driveway
-//   const yourDrivewayResult = await User.find({'email': req.user._id}, {'driveway.bookedBy': 1})
-  
-
-// return { booked: bookedDrivewayResult, driveway: yourDrivewayResult};
-// })
-
 const getDriveways = catchAsync(async (req, res) => {
-  // console.log("we're in", req.body);
-  // const filter = { 
-  //   $and: [
-  //   {driveway: { $exists: true } },
-  //   {'driveway.vacant': true  },
-  //   // {"driveway.loc": {"$nearSphere": {"$geometry": {type: "Point", coordinates: [25.601198, 45.657976]}, "$maxDistance": 1000}}}
-  //   ]
-  // };
+
 
   const result = await User.find(
     { $and: [
@@ -246,7 +211,7 @@ const bookDriveway = catchAsync(async (req, res) => {
       customer: customer.id,
       type: 'card',
     }); 
-    if (paymentMethods.data.length > 0) {
+    if (!(paymentMethods.data.length > 0)) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'No payment methods present');
     }
 
@@ -290,7 +255,38 @@ const releaseDriveway = catchAsync(async (req, res) => {
   userBookingDriveway.booked = null;
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, userBookingDriveway);
   
-  res.send(userBookingDrivewayResult);
+
+
+  let customer = userBookingDriveway.customer;
+  const paymentMethods = await stripe.paymentMethods.list({
+    customer: customer.id,
+    type: 'card',
+  });
+  console.log("Payment methods: ", paymentMethods);
+  console.log("PaymentMethods.data[0].id: ", paymentMethods.data[0].id);
+
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: 1199,
+      currency: 'usd',
+      customer: customer.id,
+      payment_method: paymentMethods.data[0].id,
+      off_session: true,
+      confirm: true,
+    });
+    console.log("payment success", paymentIntent);
+    userBookingDrivewayResult
+    res.send(userBookingDrivewayResult);
+  } catch (err) {
+    // Error code will be authentication_required if authentication is needed
+    console.log('Error code is: ', err.code);
+    const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
+    userBookingDrivewayResult.paymentIntentRetrievedErr = paymentIntentRetrieved;
+    console.log('PI retrieved: ', paymentIntentRetrieved.id);
+    throw new ApiError(httpStatus.BAD_REQUEST, 'Payment failed - please contact administrator');
+  }
+
+
 });
 
 const deleteUser = catchAsync(async (req, res) => {
