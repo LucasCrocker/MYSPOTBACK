@@ -22,38 +22,6 @@ const checkForPaymentMethod = catchAsync(async (req, res) => {
 
     res.send(paymentMethods.data.length > 0);
 });
-const testPaymentSheet = catchAsync(async (req, res) => {
-  const ObjectId = require('mongodb').ObjectId;
-
-  let user = await User.findOne(
-    {"_id": ObjectId(req.user._id)},
-  )
-    let customer = user.customer;
-    const paymentMethods = await stripe.paymentMethods.list({
-      customer: customer.id,
-      type: 'card',
-    });
-    console.log("Payment methods: ", paymentMethods);
-    console.log("PaymentMethods.data[0].id: ", paymentMethods.data[0].id);
-
-  try {
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: 1199,
-      currency: 'usd',
-      customer: customer.id,
-      payment_method: paymentMethods.data[0].id,
-      off_session: true,
-      confirm: true,
-    });
-    res.send(paymentIntent);
-  } catch (err) {
-    // Error code will be authentication_required if authentication is needed
-    console.log('Error code is: ', err.code);
-    const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
-    console.log('PI retrieved: ', paymentIntentRetrieved.id);
-    throw new ApiError(httpStatus.BAD_REQUEST, 'Payment failed - please contact administrator');
-  }
-});
 
 const paymentSheet = catchAsync(async (req, res) => {
 
@@ -63,16 +31,16 @@ const paymentSheet = catchAsync(async (req, res) => {
     {"_id": ObjectId(req.user._id)},
   )
   let customer = user.customer;
-  console.log("flag 1");
+  // console.log("flag 1");
   const ephemeralKey = await stripe.ephemeralKeys.create(
     {customer: customer.id},
     {apiVersion: '2022-08-01'}
   );
-  console.log("flag 2");
+  // console.log("flag 2");
   const setupIntent = await stripe.setupIntents.create({
     customer: customer.id,
   });
-  console.log("flag 3")
+  // console.log("flag 3")
 
   res.send({
     setupIntent: setupIntent.client_secret,
@@ -82,58 +50,12 @@ const paymentSheet = catchAsync(async (req, res) => {
   })
 });
 
-const processPaymentIntent = catchAsync(async (req, res) => {
-  const ObjectId = require('mongodb').ObjectId;
 
-  let user = await User.findOne(
-    {"_id": ObjectId(req.user._id)},
-  )
-  const paymentMethods = await stripe.paymentMethods.list({
-    customer: user.customer.id,
-    type: 'card',
-  });
-  console.log("paymentMethods", paymentMethods);
-  try {
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: 1099,
-      currency: 'cad',
-      customer: user.customer.id,
-      payment_method: card,
-      // payment_method: paymentMethods[0].id,
-      off_session: true,
-      confirm: true,
-    });
-    const clientSecret = paymentIntent.client_secret;
-    res.send(clientSecret);
-  } catch (err) {
-    console.log('Error code is: ', err.code);
-
-  }
-});
-
-// create the payment intent for a given user
-const setPaymentIntent = catchAsync(async (req, res) => {
-  const ObjectId = require('mongodb').ObjectId;
-
-  let user = await User.findOne(
-    {"_id": ObjectId(req.user._id)},
-  )
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: 1099, //lowest denomination of particular currency
-    currency: "usd",
-    payment_method_types: ["card"], //by default
-  });
-
-  const clientSecret = paymentIntent.client_secret;
-  console.log("client secret is: ", clientSecret)
-  res.send(clientSecret);
-});
 
 const createUser = catchAsync(async (req, res) => {
   const customer = await stripe.customers.create();
   req.body.customer = customer;
-  console.log("customer: ", customer);
+  // console.log("customer: ", customer);
   const user = await userService.createUser(req.body);
   res.status(httpStatus.CREATED).send(user);
 });
@@ -155,8 +77,44 @@ const getUser = catchAsync(async (req, res) => {
 
 const getDriveways = catchAsync(async (req, res) => {
 
+  // const numVacantDriveways = 1
+  const numVacantDriveways = await User.aggregate(
+    [
+      {
+        $geoNear: {
+           near: { type: "Point", coordinates: [req.body.location.location.lng, req.body.location.location.lat] },
+           distanceField: "dist.calculated",
+           maxDistance: 1000,
+           minDistance: 0,
+           key: "driveway.loc",
+           spherical: true,
+           query: {'driveway.vacant': true  }
+        }
+      },
+      {
+        $count: "count"
+      }
+    ]
+  )
+  const numTotalDriveways = await User.aggregate(
+    [
+      {
+        $geoNear: {
+           near: { type: "Point", coordinates: [req.body.location.location.lng, req.body.location.location.lat] },
+           distanceField: "dist.calculated",
+           maxDistance: 1000,
+           minDistance: 0,
+           key: "driveway.loc",
+           spherical: true
+        }
+      },
+      {
+        $count: "count"
+      }
+    ]
+  )
 
-  const result = await User.find(
+  let result = await User.find(
     { $and: [
     {
       "driveway.loc": {
@@ -175,11 +133,15 @@ const getDriveways = catchAsync(async (req, res) => {
   {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1 }
  )
  console.log("result: ", result);
- 
+ console.log("numTotalDriveways: ", numTotalDriveways);
+ console.log("numVacantDriveways: ", numVacantDriveways);
+ const quote = (numVacantDriveways/numTotalDriveways * 150) > 0.5 ? (numVacantDriveways/numTotalDriveways * 150).toFixed(2) : 0.5
+
   // const filter = pick(req.query, ['name', 'role']);
   // const options = pick(req.query, ['sortBy', 'limit', 'page']);
   // const result = await userService.queryUsers(filter, options);
-
+  await userService.updateUserById(req.user._id, {quote: quote});
+  result = {spots: result, quote: quote};
   res.send(result);
 });
 
@@ -231,7 +193,8 @@ const bookDriveway = catchAsync(async (req, res) => {
   let bookedDriveway = {
     idOfDriveway: result._id,
     lastModified: new Date(),
-    driveway: result.driveway.location
+    driveway: result.driveway.location,
+    lockedInPrice: userCheck.quote
   }
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, {booked: bookedDriveway});
   const user = await userService.updateUserById(result._id, {driveway: result.driveway});
@@ -252,6 +215,7 @@ const releaseDriveway = catchAsync(async (req, res) => {
   let userBookingDriveway = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
+  const price = userBookingDriveway.booked.lockedInPrice;
   userBookingDriveway.booked = null;
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, userBookingDriveway);
   
@@ -267,8 +231,8 @@ const releaseDriveway = catchAsync(async (req, res) => {
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: 1199,
-      currency: 'usd',
+      amount: (price * 100),
+      currency: 'cad',
       customer: customer.id,
       payment_method: paymentMethods.data[0].id,
       off_session: true,
@@ -319,10 +283,10 @@ module.exports = {
   deleteUser,
   bookDriveway,
   releaseDriveway,
-  setPaymentIntent,
-  processPaymentIntent,
+  // setPaymentIntent,
+  // processPaymentIntent,
   paymentSheet,
-  testPaymentSheet,
+  // testPaymentSheet,
   deleteDriveway,
   checkForPaymentMethod
 };

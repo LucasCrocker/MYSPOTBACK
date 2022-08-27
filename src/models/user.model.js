@@ -6,6 +6,9 @@ const { roles } = require('../config/roles');
 
 const userSchema = mongoose.Schema(
   {
+    quote: {
+      type: Number,
+    },
     customer: {
       type: Object,
     },

@@ -33,21 +33,21 @@ router
   .route('/release-driveway')
   .get(auth('blanket'), userController.releaseDriveway);
 
-router
-  .route('/set-payment-intent')
-  .post(auth('blanket'), userController.setPaymentIntent);
+// router
+//   .route('/set-payment-intent')
+//   .post(auth('blanket'), userController.setPaymentIntent);
 
-router
-  .route('/process-payment-intent')
-  .post(auth('blanket'), userController.processPaymentIntent);
+// router
+//   .route('/process-payment-intent')
+//   .post(auth('blanket'), userController.processPaymentIntent);
 
 router
   .route('/payment-sheet')
   .post(auth('blanket'), userController.paymentSheet);
 
-router
-  .route('/test-payment-sheet')
-  .post(auth('blanket'), userController.testPaymentSheet);
+// router
+//   .route('/test-payment-sheet')
+//   .post(auth('blanket'), userController.testPaymentSheet);
 
 router
   .route('/check-for-payment-method')
