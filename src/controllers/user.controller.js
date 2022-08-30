@@ -179,8 +179,8 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
 
     const accountLink = await stripe.accountLinks.create({
       account: newAccount.id,
-      refresh_url: 'http://localhost:3000',
-      return_url: 'http://localhost:3000',
+      refresh_url: 'https://myspot-back.herokuapp.com/v1/auth/redirect',
+      return_url: 'https://myspot-back.herokuapp.com/v1/auth/redirect',
       type: 'account_onboarding',
     });
 
