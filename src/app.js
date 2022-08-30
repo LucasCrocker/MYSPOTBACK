@@ -15,11 +15,98 @@ const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utils/ApiError');
 const YOUR_DOMAIN = 'http://localhost:3000';
 const app = express();
+const stripe = require('stripe')('sk_test_Hrs6SAopgFPF0bZXSN3f6ELN');
 
 if (config.env !== 'test') {
   app.use(morgan.successHandler);
   app.use(morgan.errorHandler);
 }
+
+// This is your Stripe CLI webhook secret for testing your endpoint locally.
+const endpointSecret = "whsec_uqvZJ0leP3IgUZaoA9EkYZpYxs9y0vcb";
+
+app.post('/webhook', express.raw({type: 'application/json'}), (request, response) => {
+  const sig = request.headers['stripe-signature'];
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(request.body, sig, endpointSecret);
+  } catch (err) {
+    response.status(400).send(`Webhook Error: ${err.message}`);
+    return;
+  }
+  console.log(`Incoming webhook event ${event.type}`);
+  let account;
+  let application;
+  let externalAccount;
+  let paymentIntent;
+  // Handle the event
+  switch (event.type) {
+    case 'account.updated':
+      account = event.data.object;
+      // Then define and call a function to handle the event account.updated
+      break;
+    case 'account.application.authorized':
+      application = event.data.object;
+      // Then define and call a function to handle the event account.application.authorized
+      break;
+    case 'account.application.deauthorized':
+      application = event.data.object;
+      // Then define and call a function to handle the event account.application.deauthorized
+      break;
+    case 'account.external_account.created':
+      externalAccount = event.data.object;
+      // Then define and call a function to handle the event account.external_account.created
+      break;
+    case 'account.external_account.deleted':
+      externalAccount = event.data.object;
+      // Then define and call a function to handle the event account.external_account.deleted
+      break;
+    case 'account.external_account.updated':
+      externalAccount = event.data.object;
+      // Then define and call a function to handle the event account.external_account.updated
+      break;
+    case 'payment_intent.amount_capturable_updated':
+      paymentIntent = event.data.object;
+      // Then define and call a function to handle the event payment_intent.amount_capturable_updated
+      break;
+    case 'payment_intent.canceled':
+      paymentIntent = event.data.object;
+      // Then define and call a function to handle the event payment_intent.canceled
+      break;
+    case 'payment_intent.created':
+      paymentIntent = event.data.object;
+      // Then define and call a function to handle the event payment_intent.created
+      break;
+    case 'payment_intent.partially_funded':
+      paymentIntent = event.data.object;
+      // Then define and call a function to handle the event payment_intent.partially_funded
+      break;
+    case 'payment_intent.payment_failed':
+      paymentIntent = event.data.object;
+      // Then define and call a function to handle the event payment_intent.payment_failed
+      break;
+    case 'payment_intent.processing':
+      paymentIntent = event.data.object;
+      // Then define and call a function to handle the event payment_intent.processing
+      break;
+    case 'payment_intent.requires_action':
+      paymentIntent = event.data.object;
+      // Then define and call a function to handle the event payment_intent.requires_action
+      break;
+    case 'payment_intent.succeeded':
+      paymentIntent = event.data.object;
+      // Then define and call a function to handle the event payment_intent.succeeded
+      break;
+    // ... handle other event types
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  // Return a 200 response to acknowledge receipt of the event
+  response.send();
+});
 
 // set security HTTP headers
 app.use(helmet());
@@ -52,50 +139,6 @@ if (config.env === 'production') {
 
 // v1 api routes
 app.use('/v1', routes);
-
-const stripe = require('stripe')('sk_test_Hrs6SAopgFPF0bZXSN3f6ELN');
-// This example sets up an endpoint using the Express framework.
-// Watch this video to get started: https://youtu.be/rPR2aJ6XnAc.
-
-// app.post('/payment-sheet', async (req, res) => {
-//   // Use an existing Customer ID if this is a returning customer.
-//   const customer = await stripe.customers.create();
-//   const ephemeralKey = await stripe.ephemeralKeys.create(
-//     {customer: customer.id},
-//     {apiVersion: '2022-08-01'}
-//   );
-//   const paymentIntent = await stripe.paymentIntents.create({
-//     amount: 1099,
-//     currency: 'eur',
-//     customer: customer.id,
-//     automatic_payment_methods: {
-//       enabled: true,
-//     },
-//   });
-
-//   res.json({
-//     paymentIntent: paymentIntent.client_secret,
-//     ephemeralKey: ephemeralKey.secret,
-//     customer: customer.id,
-//     publishableKey: 'pk_test_51LZlAiBPaG0NtDBCN9LceoWeCkacRMmrY3EQcNtJCEcjrWGnzJudSd0fH97NGAiFFSzXaDG0OkrzWTno0ppcU84n007mQUmu3b'
-//   });
-// });
-app.post('/create-checkout-session', async (req, res) => {
-  const session = await stripe.checkout.sessions.create({
-    line_items: [
-      {
-        // Provide the exact Price ID (for example, pr_1234) of the product you want to sell
-        price: '39',
-        quantity: 1,
-      },
-    ],
-    mode: 'payment',
-    success_url: `${YOUR_DOMAIN}?success=true`,
-    cancel_url: `${YOUR_DOMAIN}?canceled=true`,
-  });
-
-  res.redirect(303, session.url);
-});
 
 // send back a 404 error for any unknown api request
 app.use((req, res, next) => {
