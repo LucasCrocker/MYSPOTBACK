@@ -159,14 +159,15 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
   let userCheck = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
-  if (userCheck.account) {
+
+  if (userCheck.account !== undefined) {
     req.body['vacant'] = true;
     // req.body['account'] = account;
     req.body['loc'] = {
       type: 'Point',
       coordinates: [req.body.location.location.lng, req.body.location.location.lat]
     }
-    const user = await userService.updateUserById(req.user._id, {account: newAccount, driveway: req.body});
+    const user = await userService.updateUserById(req.user._id, {driveway: req.body});
     res.send(user);
   } else {
   // add a stripe account for the driveway
