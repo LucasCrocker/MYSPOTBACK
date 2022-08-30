@@ -15,6 +15,9 @@ const userSchema = mongoose.Schema(
     driveway: {
       type: Object,
     },
+    account: {
+      type: Object,
+    },
     booked: {
       type: Object,
     },

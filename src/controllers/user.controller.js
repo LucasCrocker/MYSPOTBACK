@@ -4,6 +4,8 @@ const ApiError = require('../utils/ApiError');
 const catchAsync = require('../utils/catchAsync');
 const { userService } = require('../services');
 const { User } = require('../models');
+const moment =  require('moment')
+
 // Set your secret key. Remember to switch to your live secret key in production.
 // See your keys here: https://dashboard.stripe.com/apikeys
 const stripe = require('stripe')('sk_test_51LZlAiBPaG0NtDBCYaZFxWwYX9HwjdH86FW69v12OUcABN57tYriwJtfiZVLoUQOhPsHf5hnIkUwA9ZNPqbOMtyv00cwMjjDC5');
@@ -151,14 +153,47 @@ const updateUser = catchAsync(async (req, res) => {
 });
 
 const addDrivewayToUser = catchAsync(async (req, res) => {
-  console.log("req.body", req.body);
-  req.body['vacant'] = true;
-  req.body['loc'] = {
-    type: 'Point',
-    coordinates: [req.body.location.location.lng, req.body.location.location.lat]
+
+  const ObjectId = require('mongodb').ObjectId;
+ 
+  let userCheck = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  )
+  if (userCheck.account) {
+    req.body['vacant'] = true;
+    // req.body['account'] = account;
+    req.body['loc'] = {
+      type: 'Point',
+      coordinates: [req.body.location.location.lng, req.body.location.location.lat]
+    }
+    const user = await userService.updateUserById(req.user._id, {account: newAccount, driveway: req.body});
+    res.send(user);
+  } else {
+  // add a stripe account for the driveway
+    const newAccount = await stripe.accounts.create({
+      country: 'CA',
+      type: 'express',
+      capabilities: {card_payments: {requested: true}, transfers: {requested: true}},
+      business_type: 'individual',
+    });
+
+    const accountLink = await stripe.accountLinks.create({
+      account: newAccount.id,
+      refresh_url: 'http://localhost:3000',
+      return_url: 'http://localhost:3000',
+      type: 'account_onboarding',
+    });
+
+    req.body['vacant'] = true;
+    // req.body['account'] = account;
+    req.body['loc'] = {
+      type: 'Point',
+      coordinates: [req.body.location.location.lng, req.body.location.location.lat]
+    }
+    const user = await userService.updateUserById(req.user._id, {account: newAccount, driveway: req.body});
+    // res.send(user);
+    res.send(accountLink);
   }
-  const user = await userService.updateUserById(req.user._id, {driveway: req.body});
-  res.send(user);
 });
 
 const bookDriveway = catchAsync(async (req, res) => {
@@ -203,11 +238,15 @@ const bookDriveway = catchAsync(async (req, res) => {
 });
 
 const releaseDriveway = catchAsync(async (req, res) => {
-
+  const myspotFee = 0.1;
   const ObjectId = require('mongodb').ObjectId;
+
   let drivewayOwner = await User.findOne(
     {"_id": ObjectId(req.user.booked.idOfDriveway)},
     )
+  let bookedDate = moment(drivewayOwner.driveway.bookedBy.lastModified);
+
+
   drivewayOwner.driveway.bookedBy = null;
   drivewayOwner.driveway.vacant = true;
   const userResult = await userService.updateUserById(req.user.booked.idOfDriveway, {driveway: drivewayOwner.driveway});
@@ -215,7 +254,7 @@ const releaseDriveway = catchAsync(async (req, res) => {
   let userBookingDriveway = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
-  const price = userBookingDriveway.booked.lockedInPrice;
+  let price = userBookingDriveway.booked.lockedInPrice;
   userBookingDriveway.booked = null;
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, userBookingDriveway);
   
@@ -228,15 +267,22 @@ const releaseDriveway = catchAsync(async (req, res) => {
   });
   console.log("Payment methods: ", paymentMethods);
   console.log("PaymentMethods.data[0].id: ", paymentMethods.data[0].id);
-
+  let now = moment(new Date());
+  let paymentTotal = now.diff(bookedDate, 'hours') * price + 5
+  console.log("payment total", paymentTotal);
+  // the plus five above is just for testing and should be removed in case I forget
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: (price * 100),
+      amount: (paymentTotal * 100),
       currency: 'cad',
       customer: customer.id,
       payment_method: paymentMethods.data[0].id,
       off_session: true,
       confirm: true,
+      application_fee_amount: (paymentTotal * 100 * myspotFee),
+      transfer_data: {
+        destination: drivewayOwner.account.id,
+      },
     });
     console.log("payment success", paymentIntent);
     userBookingDrivewayResult
