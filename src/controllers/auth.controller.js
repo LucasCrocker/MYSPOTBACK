@@ -2,6 +2,13 @@ const httpStatus = require('http-status');
 const catchAsync = require('../utils/catchAsync');
 const { authService, userService, tokenService, emailService } = require('../services');
 
+
+const redirect = catchAsync(async (req, res) => {
+  console.log("redirect working");
+
+  res.redirect("exp://192.168.0.44:19000/--/home");
+});
+
 const register = catchAsync(async (req, res) => {
   console.log("register", req.body);
   const user = await userService.createUser(req.body);
@@ -59,4 +66,5 @@ module.exports = {
   resetPassword,
   sendVerificationEmail,
   verifyEmail,
+  redirect
 };
