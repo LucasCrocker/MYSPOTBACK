@@ -181,9 +181,18 @@ const updateUser = catchAsync(async (req, res) => {
 });
 
 const addDrivewayToUser = catchAsync(async (req, res) => {
-
   const ObjectId = require('mongodb').ObjectId;
- 
+  console.log("Inside addDrivewayToUser");
+  console.log('req:', req.body);
+  const drivewayOwner = await User.findOne(
+    {"driveway.location.location": req.body.location.location}
+  )
+  console.log(drivewayOwner);
+
+  if (drivewayOwner) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'This driveway is already listed.');
+  }
+
   let userCheck = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
