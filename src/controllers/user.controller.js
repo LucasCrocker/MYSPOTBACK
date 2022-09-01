@@ -52,7 +52,35 @@ const paymentSheet = catchAsync(async (req, res) => {
   })
 });
 
+const updatePaymentMethod = catchAsync(async (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
 
+  let user = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  )
+  let customer = user.customer;
+
+  let paymentMethods = await stripe.paymentMethods.list({
+    customer: customer.id,
+    type: 'card',
+  });
+
+  console.log('Payment methods: ', paymentMethods.data[0].id);
+  let deleted;
+  if (paymentMethods.data.length > 0) {
+    deleted = await stripe.paymentMethods.detach(
+      paymentMethods.data[0].id
+    );
+  }
+  
+  paymentMethods = await stripe.paymentMethods.list({
+    customer: customer.id,
+    type: 'card',
+  });
+
+  res.send(paymentMethods.data.length > 0)
+
+})
 
 const createUser = catchAsync(async (req, res) => {
   const customer = await stripe.customers.create();
@@ -335,5 +363,6 @@ module.exports = {
   paymentSheet,
   // testPaymentSheet,
   deleteDriveway,
-  checkForPaymentMethod
+  checkForPaymentMethod,
+  updatePaymentMethod,
 };
