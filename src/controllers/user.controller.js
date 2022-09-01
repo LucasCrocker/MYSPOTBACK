@@ -228,24 +228,32 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
 const bookDriveway = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
 
- 
   let userCheck = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
-    let customer = userCheck.customer;
-    const paymentMethods = await stripe.paymentMethods.list({
-      customer: customer.id,
-      type: 'card',
-    }); 
-    if (!(paymentMethods.data.length > 0)) {
-      throw new ApiError(httpStatus.BAD_REQUEST, 'No payment methods present');
-    }
+  let customer = userCheck.customer;
+  const paymentMethods = await stripe.paymentMethods.list({
+    customer: customer.id,
+    type: 'card',
+  }); 
+  if (!(paymentMethods.data.length > 0)) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'No payment methods present');
+  }
 
   const result = await User.findOne(
     { $and: [
    {"_id": ObjectId(req.body.location.id)},
   ]}
  )
+
+ if (!(result.account)) {
+  throw new ApiError(httpStatus.BAD_REQUEST, 'Driveway owner has no account');
+ }
+
+ if (!(result.driveway)) {
+  throw new ApiError(httpStatus.BAD_REQUEST, 'This user has no driveway listed');
+ }
+ 
 //  console.log("result is:", result);
   result.driveway.vacant = false;
   result.driveway.bookedBy = {

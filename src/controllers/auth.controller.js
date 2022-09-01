@@ -6,7 +6,7 @@ const { authService, userService, tokenService, emailService } = require('../ser
 const redirect = catchAsync(async (req, res) => {
   console.log("redirect working");
 
-  res.redirect("exp://192.168.0.44:19000/--/home");
+  res.redirect("exp://10.0.0.173:19000/--/home");
 });
 
 const register = catchAsync(async (req, res) => {
