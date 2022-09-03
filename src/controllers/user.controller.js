@@ -388,6 +388,20 @@ const deleteDriveway = catchAsync(async (req, res) => {
     res.send(userResult);
   }
 });
+
+const reportUser = catchAsync(async (req, response) => {
+  const ObjectId = require('mongodb').ObjectId;
+  console.log("report user:", req.data);
+  let reportedUser = await User.findOne(
+    {"plate": ObjectId(req.plate)},
+    )
+  if(reportedUser) {
+    //TODO update user.flags
+  } else {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User not found in reportUser');
+  }
+});
+
 module.exports = {
   createUser,
   getUsers,
@@ -405,4 +419,5 @@ module.exports = {
   deleteDriveway,
   checkForPaymentMethod,
   updatePaymentMethod,
+  reportUser,
 };
