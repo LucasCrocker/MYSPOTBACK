@@ -86,7 +86,10 @@ const createUser = catchAsync(async (req, res) => {
   const customer = await stripe.customers.create();
   req.body.customer = customer;
   // console.log("customer: ", customer);
-  const user = await userService.createUser(req.body);
+  const user = await userService.createUser(req.body).lean();
+  const { isEmailVerified, ...newUser} = user;
+  console.log("user: ", user);
+  console.log("new user: " , newUser);
   res.status(httpStatus.CREATED).send(user);
 });
 

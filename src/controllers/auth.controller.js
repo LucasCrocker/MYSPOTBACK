@@ -11,15 +11,20 @@ const redirect = catchAsync(async (req, res) => {
 
 const register = catchAsync(async (req, res) => {
   console.log("register", req.body);
-  const user = await userService.createUser(req.body);
-  const tokens = await tokenService.generateAuthTokens(user);
+  const newUser = await userService.createUser(req.body);
+  const tokens = await tokenService.generateAuthTokens(newUser);
+  const { isEmailVerified, account, customer, password, ...user} = newUser.toObject();
+  console.log("user", newUser);
+  console.log("new user", user);
   res.status(httpStatus.CREATED).send({ user, tokens });
 });
 
 const login = catchAsync(async (req, res) => {
-  const { email, password } = req.body;
-  const user = await authService.loginUserWithEmailAndPassword(email, password);
-  const tokens = await tokenService.generateAuthTokens(user);
+  const email = req.body.email;
+  const user_password = req.body.password;
+  const newUser = await authService.loginUserWithEmailAndPassword(email, user_password);
+  const tokens = await tokenService.generateAuthTokens(newUser);
+  const { isEmailVerified, account, customer, password, ...user} = newUser.toObject();
   res.send({ user, tokens });
 });
 
