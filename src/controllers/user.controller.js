@@ -82,14 +82,15 @@ const updatePaymentMethod = catchAsync(async (req, res) => {
 
 })
 
+//not used?
 const createUser = catchAsync(async (req, res) => {
   const customer = await stripe.customers.create();
   req.body.customer = customer;
   // console.log("customer: ", customer);
   const user = await userService.createUser(req.body).lean();
-  const { isEmailVerified, ...newUser} = user;
-  console.log("user: ", user);
-  console.log("new user: " , newUser);
+  // const { isEmailVerified, ...newUser} = user;
+  // console.log("user: ", user);
+  // console.log("new user: " , newUser);
   res.status(httpStatus.CREATED).send(user);
 });
 
@@ -165,9 +166,9 @@ const getDriveways = catchAsync(async (req, res) => {
   ]},
   {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1 }
  )
- console.log("result: ", result);
- console.log("numTotalDriveways: ", numTotalDriveways);
- console.log("numVacantDriveways: ", numVacantDriveways);
+//  console.log("result: ", result);
+//  console.log("numTotalDriveways: ", numTotalDriveways);
+//  console.log("numVacantDriveways: ", numVacantDriveways);
  const quote = (numVacantDriveways/numTotalDriveways * 150) > 0.5 ? (numVacantDriveways/numTotalDriveways * 150).toFixed(2) : 0.5
 
   // const filter = pick(req.query, ['name', 'role']);
@@ -190,7 +191,7 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
   const drivewayOwner = await User.findOne(
     {"driveway.location.location": req.body.location.location}
   )
-  console.log(drivewayOwner);
+  // console.log(drivewayOwner);
 
   if (drivewayOwner) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'This driveway is already listed.');
@@ -207,8 +208,11 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
       type: 'Point',
       coordinates: [req.body.location.location.lng, req.body.location.location.lat]
     }
-    const user = await userService.updateUserById(req.user._id, {driveway: req.body});
-    res.send(user);
+    const newUser = await userService.updateUserById(req.user._id, {driveway: req.body});
+    const { isEmailVerified, account, customer, password, ...user} = newUser.toObject();
+    // console.log("user", newUser);
+    // console.log("new user", user);  
+    res.send(newUser);
   } else {
   // add a stripe account for the driveway
     const newAccount = await stripe.accounts.create({
@@ -231,8 +235,10 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
       type: 'Point',
       coordinates: [req.body.location.location.lng, req.body.location.location.lat]
     }
+
     const user = await userService.updateUserById(req.user._id, {account: newAccount, driveway: req.body});
     // res.send(user);
+    console.log(accountLink);
     res.send(accountLink);
   }
 });
@@ -243,9 +249,9 @@ const bookDriveway = catchAsync(async (req, res) => {
   let userCheck = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
-  let customer = userCheck.customer;
+  let temp_customer = userCheck.customer;
   const paymentMethods = await stripe.paymentMethods.list({
-    customer: customer.id,
+    customer: temp_customer.id,
     type: 'card',
   }); 
   if (!(paymentMethods.data.length > 0)) {
@@ -283,7 +289,10 @@ const bookDriveway = catchAsync(async (req, res) => {
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, {booked: bookedDriveway});
   const user = await userService.updateUserById(result._id, {driveway: result.driveway});
   // console.log("here it is m8: ", userBookingDrivewayResult);
-  res.send(userBookingDrivewayResult);
+  const { isEmailVerified, account, customer, password, ...userBookingDriveway} = userBookingDrivewayResult.toObject();
+  // console.log("user", userBookingDrivewayResult);
+  console.log("new user", userBookingDriveway);  
+  res.send(userBookingDriveway);
 });
 
 const releaseDriveway = catchAsync(async (req, res) => {
@@ -309,22 +318,22 @@ const releaseDriveway = catchAsync(async (req, res) => {
   
 
 
-  let customer = userBookingDriveway.customer;
+  let temp_customer = userBookingDriveway.customer;
   const paymentMethods = await stripe.paymentMethods.list({
-    customer: customer.id,
+    customer: temp_customer.id,
     type: 'card',
   });
-  console.log("Payment methods: ", paymentMethods);
-  console.log("PaymentMethods.data[0].id: ", paymentMethods.data[0].id);
+  // console.log("Payment methods: ", paymentMethods);
+  // console.log("PaymentMethods.data[0].id: ", paymentMethods.data[0].id);
   let now = moment(new Date());
-  let paymentTotal = now.diff(bookedDate, 'hours') * price + 5
+  let paymentTotal = now.diff(bookedDate, 'hours') * price +5
   console.log("payment total", paymentTotal);
-  // the plus five above is just for testing and should be removed in case I forget
+  // the plus five above is just for testing and should be removed in case I forget +5\_<_<_/
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: (paymentTotal * 100),
       currency: 'cad',
-      customer: customer.id,
+      customer: temp_customer.id,
       payment_method: paymentMethods.data[0].id,
       off_session: true,
       confirm: true,
@@ -334,8 +343,11 @@ const releaseDriveway = catchAsync(async (req, res) => {
       },
     });
     console.log("payment success", paymentIntent);
-    userBookingDrivewayResult
-    res.send(userBookingDrivewayResult);
+    
+    // userBookingDrivewayResult
+    const { isEmailVerified, account, customer, password, ...newUser} = userBookingDrivewayResult.toObject();
+    console.log("releaseDriveway new user:", newUser);
+    res.send(newUser);
   } catch (err) {
     // Error code will be authentication_required if authentication is needed
     console.log('Error code is: ', err.code);
@@ -365,6 +377,9 @@ const deleteDriveway = catchAsync(async (req, res) => {
   } else {
     drivewayOwner.driveway = null;
     const userResult = await userService.updateUserById(req.user._id, {driveway: drivewayOwner.driveway});
+    const { isEmailVerified, account, customer, password, ...newUser} = userResult.toObject();
+    console.log("deletedriveway new user:", newUser);
+
     res.send(userResult);
   }
 });
