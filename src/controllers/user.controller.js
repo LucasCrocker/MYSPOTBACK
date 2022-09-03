@@ -325,10 +325,11 @@ const releaseDriveway = catchAsync(async (req, res) => {
   });
   // console.log("Payment methods: ", paymentMethods);
   // console.log("PaymentMethods.data[0].id: ", paymentMethods.data[0].id);
+  const flatRate = 1;
   let now = moment(new Date());
-  let paymentTotal = now.diff(bookedDate, 'hours') * price +5
+  let paymentTotal = now.diff(bookedDate, 'hours') * price + flatRate;
   console.log("payment total", paymentTotal);
-  // the plus five above is just for testing and should be removed in case I forget +5\_<_<_/
+
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: (paymentTotal * 100),
