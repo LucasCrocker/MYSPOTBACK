@@ -189,9 +189,13 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
   console.log("Inside addDrivewayToUser");
   console.log('req:', req.body);
   const drivewayOwner = await User.findOne(
-    {"driveway.location.location": req.body.location.location}
+    { $and: [
+      { "driveway.location.location": req.body.location.location },
+      { "driveway.location.description": req.body.location.description}
+    ]}  
   )
-  // console.log(drivewayOwner);
+
+  console.log(req.body.location.location);
 
   if (drivewayOwner) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'This driveway is already listed.');
