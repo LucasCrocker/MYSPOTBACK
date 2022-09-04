@@ -9,6 +9,12 @@ const userSchema = mongoose.Schema(
     flags: {
       type: Object,
     },
+    inviteCode: {
+      type: String
+    },
+    plate: {
+      type: String
+    },
     quote: {
       type: Number,
     },

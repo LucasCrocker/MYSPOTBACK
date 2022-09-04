@@ -50,6 +50,14 @@ router
   .get(auth('blanket'), userController.deleteDriveway);
 
 router
+  .route('/report-user')
+  .get(auth('blanket'), userController.reportUser);  
+
+router
+  .route('/register-as-driver')
+  .post(auth('blanket'), validate(userValidation.registerUserAsDriver), userController.registerUserAsDriver);
+
+router
   .route('/:userId')
   .get(auth('getUsers'), validate(userValidation.getUser), userController.getUser)
   .patch(auth('manageUsers'), validate(userValidation.updateUser), userController.updateUser)
