@@ -6,6 +6,12 @@ const { roles } = require('../config/roles');
 
 const userSchema = mongoose.Schema(
   {
+    inviteCode: {
+      type: String
+    },
+    plate: {
+      type: String
+    },
     quote: {
       type: Number,
     },
