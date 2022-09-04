@@ -6,6 +6,9 @@ const { roles } = require('../config/roles');
 
 const userSchema = mongoose.Schema(
   {
+    flags: {
+      type: Object,
+    },
     quote: {
       type: Number,
     },
