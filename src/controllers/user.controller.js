@@ -175,7 +175,33 @@ const getDriveways = catchAsync(async (req, res) => {
   // const options = pick(req.query, ['sortBy', 'limit', 'page']);
   // const result = await userService.queryUsers(filter, options);
   await userService.updateUserById(req.user._id, {quote: quote});
-  result = {spots: result, quote: quote};
+  // let bestSpot = result[0]
+  // let { isEmailVerified, account, customer, password, ...bestSpot} = result[0].toObject();
+
+  const random1 = Math.floor(Math.random() * 10)
+  const random2 = Math.floor(Math.random() * 10)
+  const random3 = Math.floor(Math.random() * 10)
+  const random4 = Math.floor(Math.random() * 10)
+  // console.log("random1", random1)
+  // console.log("random2", random2)
+  let fuzzedLat = (result[0].driveway.location.location.lat).toFixed(3) + random1 + random1 + random3 + random4;
+  let fuzzedLng = (result[0].driveway.location.location.lng).toFixed(3) + random2 + random2 + random3 + random4;
+  let bestSpot = {
+    id: result[0]._id,
+    driveway: {
+      location: {
+        location: { 
+          lat: parseFloat(fuzzedLat ),
+          lng: parseFloat(fuzzedLng )
+        },
+        description: result[0].driveway.location.description.replace(/[0-9]/g, '').trim(),
+      }
+    }
+  }
+  let spots = [bestSpot]
+  // let spots = [result[0]]
+  console.log("bestSpot", bestSpot)
+  result = {spots: spots, quote: quote};
   res.send(result);
 });
 
@@ -263,7 +289,7 @@ const bookDriveway = catchAsync(async (req, res) => {
    {"_id": ObjectId(req.body.location.id)},
   ]}
  )
-
+  console.log("result account fuck up guy", result);
  if (!(result.account)) {
   throw new ApiError(httpStatus.BAD_REQUEST, 'Driveway owner has no account');
  }
