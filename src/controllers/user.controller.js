@@ -65,7 +65,7 @@ const updatePaymentMethod = catchAsync(async (req, res) => {
     type: 'card',
   });
 
-  console.log('Payment methods: ', paymentMethods.data[0].id);
+  // console.log('Payment methods: ', paymentMethods.data[0].id);
   let deleted;
   if (paymentMethods.data.length > 0) {
     deleted = await stripe.paymentMethods.detach(
@@ -175,7 +175,33 @@ const getDriveways = catchAsync(async (req, res) => {
   // const options = pick(req.query, ['sortBy', 'limit', 'page']);
   // const result = await userService.queryUsers(filter, options);
   await userService.updateUserById(req.user._id, {quote: quote});
-  result = {spots: result, quote: quote};
+  // let bestSpot = result[0]
+  // let { isEmailVerified, account, customer, password, ...bestSpot} = result[0].toObject();
+
+  const random1 = Math.floor(Math.random() * 10)
+  const random2 = Math.floor(Math.random() * 10)
+  const random3 = Math.floor(Math.random() * 10)
+  const random4 = Math.floor(Math.random() * 10)
+  // console.log("random1", random1)
+  // console.log("random2", random2)
+  let fuzzedLat = (result[0].driveway.location.location.lat).toFixed(3) + random1 + random1 + random3 + random4;
+  let fuzzedLng = (result[0].driveway.location.location.lng).toFixed(3) + random2 + random2 + random3 + random4;
+  let bestSpot = {
+    id: result[0]._id,
+    driveway: {
+      location: {
+        location: { 
+          lat: parseFloat(fuzzedLat ),
+          lng: parseFloat(fuzzedLng )
+        },
+        description: result[0].driveway.location.description.replace(/[0-9]/g, '').trim(),
+      }
+    }
+  }
+  let spots = [bestSpot]
+  // let spots = [result[0]]
+  console.log("bestSpot", bestSpot)
+  result = {spots: spots, quote: quote};
   res.send(result);
 });
 
@@ -209,7 +235,7 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
       coordinates: [req.body.location.location.lng, req.body.location.location.lat]
     }
     const newUser = await userService.updateUserById(req.user._id, {driveway: req.body});
-    const { isEmailVerified, account, customer, password, ...user} = newUser.toObject();
+    const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
     // console.log("user", newUser);
     // console.log("new user", user);  
     res.send(newUser);
@@ -263,13 +289,17 @@ const bookDriveway = catchAsync(async (req, res) => {
    {"_id": ObjectId(req.body.location.id)},
   ]}
  )
-
+  console.log("result account fuck up guy", result);
  if (!(result.account)) {
   throw new ApiError(httpStatus.BAD_REQUEST, 'Driveway owner has no account');
  }
 
  if (!(result.driveway)) {
   throw new ApiError(httpStatus.BAD_REQUEST, 'This user has no driveway listed');
+ }
+
+ if (result.flags && result.flags.paymentIntentRetrievedErr) {
+  throw new ApiError(httpStatus.BAD_REQUEST, 'There was an error with your lat payment on this platform - please contact the administrator');
  }
  
 //  console.log("result is:", result);
@@ -289,7 +319,7 @@ const bookDriveway = catchAsync(async (req, res) => {
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, {booked: bookedDriveway});
   const user = await userService.updateUserById(result._id, {driveway: result.driveway});
   // console.log("here it is m8: ", userBookingDrivewayResult);
-  const { isEmailVerified, account, customer, password, ...userBookingDriveway} = userBookingDrivewayResult.toObject();
+  const { isEmailVerified, account, customer, password, flags, ...userBookingDriveway} = userBookingDrivewayResult.toObject();
   // console.log("user", userBookingDrivewayResult);
   console.log("new user", userBookingDriveway);  
   res.send(userBookingDriveway);
@@ -346,14 +376,17 @@ const releaseDriveway = catchAsync(async (req, res) => {
     console.log("payment success", paymentIntent);
     
     // userBookingDrivewayResult
-    const { isEmailVerified, account, customer, password, ...newUser} = userBookingDrivewayResult.toObject();
+    const { isEmailVerified, account, customer, password, flags, ...newUser} = userBookingDrivewayResult.toObject();
     console.log("releaseDriveway new user:", newUser);
     res.send(newUser);
   } catch (err) {
     // Error code will be authentication_required if authentication is needed
     console.log('Error code is: ', err.code);
     const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
-    userBookingDrivewayResult.paymentIntentRetrievedErr = paymentIntentRetrieved;
+    (userBookingDrivewayResult.flags) ? 
+      userBookingDrivewayResult.flags.paymentIntentRetrievedErr = paymentIntentRetrieved
+      :
+      userBookingDrivewayResult.flags = {'paymentIntentRetrievedErr': paymentIntentRetrieved}
     console.log('PI retrieved: ', paymentIntentRetrieved.id);
     throw new ApiError(httpStatus.BAD_REQUEST, 'Payment failed - please contact administrator');
   }
@@ -378,7 +411,7 @@ const deleteDriveway = catchAsync(async (req, res) => {
   } else {
     drivewayOwner.driveway = null;
     const userResult = await userService.updateUserById(req.user._id, {driveway: drivewayOwner.driveway});
-    const { isEmailVerified, account, customer, password, ...newUser} = userResult.toObject();
+    const { isEmailVerified, account, customer, password, flags, ...newUser} = userResult.toObject();
     console.log("deletedriveway new user:", newUser);
 
     res.send(userResult);
