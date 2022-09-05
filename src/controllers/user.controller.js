@@ -168,7 +168,7 @@ const getDriveways = catchAsync(async (req, res) => {
            minDistance: 0,
            key: "driveway.loc",
            spherical: true,
-           query: {'driveway.vacant': true  }
+           query: {'driveway.vacant': true, 'account.charges_enabled': true   }
         }
       },
       {
@@ -176,6 +176,10 @@ const getDriveways = catchAsync(async (req, res) => {
       }
     ]
   )
+  if (numVacantDriveways.length === 0) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'There are no spots currently available');
+  }
+
   const numTotalDriveways = await User.aggregate(
     [
       {
@@ -185,7 +189,8 @@ const getDriveways = catchAsync(async (req, res) => {
            maxDistance: 1000,
            minDistance: 0,
            key: "driveway.loc",
-           spherical: true
+           spherical: true,
+           query: {'account.charges_enabled': true   }
         }
       },
       {
@@ -212,8 +217,10 @@ const getDriveways = catchAsync(async (req, res) => {
   ]},
   {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1 }
  )
-//  console.log("result: ", result);
-  const quote = (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5) > 0.5 ? (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5).toFixed(2) : 0.5
+ console.log("numVacantDriveways[0].count: ", numVacantDriveways[0].count);
+ console.log("numTotalDriveways[0].count: ", numTotalDriveways[0].count);
+ const quote = (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5) > 0.5 ? (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5).toFixed(2) : 0.5
+ console.log("quote: ", quote);
 
   // const filter = pick(req.query, ['name', 'role']);
   // const options = pick(req.query, ['sortBy', 'limit', 'page']);
