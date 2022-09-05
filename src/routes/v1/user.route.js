@@ -34,6 +34,14 @@ router
   .get(auth('blanket'), userController.releaseDriveway);
 
 router
+  .route('/account-status')
+  .get(auth('blanket'), userController.accountStatus);
+
+router
+  .route('/account-link')
+  .get(auth('blanket'), userController.accountLink);
+
+router
   .route('/payment-sheet')
   .get(auth('blanket'), userController.paymentSheet);
 

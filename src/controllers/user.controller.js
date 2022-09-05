@@ -25,6 +25,52 @@ const checkForPaymentMethod = catchAsync(async (req, res) => {
     res.send(paymentMethods.data.length > 0);
 });
 
+const accountStatus = catchAsync(async (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+
+  let user = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  )
+  if (user.account === null) {
+    console.log("no account found for user")
+    return user;
+  }
+    let account = user.account;
+    const accountObj = await stripe.accounts.retrieve(
+      account.id
+    );
+    const userObj = await userService.updateUserById(req.user._id, {account: accountObj});
+
+    const balance = await stripe.balance.retrieve({
+      stripeAccount: account.id
+    });
+    console.log("-----------AccountObj-----------", userObj)
+    console.log("-----------balanceObj-----------", balance)
+    res.send(userObj);
+});
+const accountLink = catchAsync(async (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+
+  let user = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  )
+  if (user.account === null) {
+    console.log("no account found for user")
+    return user;
+  }
+    let account = user.account;
+    const accountLink = await stripe.accountLinks.create({
+      account: account.id,
+      refresh_url: 'https://myspot-back.herokuapp.com/v1/auth/redirect',
+      return_url: 'https://myspot-back.herokuapp.com/v1/auth/redirect',
+      type: 'account_onboarding',
+    });
+
+    console.log(accountLink);
+    res.send(accountLink);
+
+});
+
 const paymentSheet = catchAsync(async (req, res) => {
 
   const ObjectId = require('mongodb').ObjectId;
@@ -167,9 +213,7 @@ const getDriveways = catchAsync(async (req, res) => {
   {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1 }
  )
 //  console.log("result: ", result);
-//  console.log("numTotalDriveways: ", numTotalDriveways);
-//  console.log("numVacantDriveways: ", numVacantDriveways);
- const quote = (numVacantDriveways/numTotalDriveways * 150) > 0.5 ? (numVacantDriveways/numTotalDriveways * 150).toFixed(2) : 0.5
+  const quote = (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5) > 0.5 ? (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5).toFixed(2) : 0.5
 
   // const filter = pick(req.query, ['name', 'role']);
   // const options = pick(req.query, ['sortBy', 'limit', 'page']);
@@ -230,8 +274,8 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
   let userCheck = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
-
-  if (userCheck.account !== undefined) {
+  // user account active
+  if (userCheck.account.charges_enabled) {
     req.body['vacant'] = true;
     // req.body['account'] = account;
     req.body['loc'] = {
@@ -243,8 +287,20 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
     // console.log("user", newUser);
     // console.log("new user", user);  
     res.send(newUser);
+  } else if (userCheck.account !== null) {
+    // user account inactive
+
+    const accountLink = await stripe.accountLinks.create({
+      account: userCheck.account.id,
+      refresh_url: 'https://myspot-back.herokuapp.com/v1/auth/redirect',
+      return_url: 'https://myspot-back.herokuapp.com/v1/auth/redirect',
+      type: 'account_onboarding',
+    });
+
+    console.log(accountLink);
+    res.send(accountLink);
   } else {
-  // add a stripe account for the driveway
+  // user has no account
     const newAccount = await stripe.accounts.create({
       country: 'CA',
       type: 'express',
@@ -359,20 +415,19 @@ const releaseDriveway = catchAsync(async (req, res) => {
   });
   // console.log("Payment methods: ", paymentMethods);
   // console.log("PaymentMethods.data[0].id: ", paymentMethods.data[0].id);
-  const flatRate = 1;
+  const serviceFee = 1;
   let now = moment(new Date());
-  let paymentTotal = now.diff(bookedDate, 'hours') * price + flatRate;
-  console.log("payment total", paymentTotal);
+  let paymentTotal = ( ((now.diff(bookedDate, 'minutes') * price / 60 ) + serviceFee) ).toFixed(2) * 100;
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: (paymentTotal * 100),
+      amount: (paymentTotal),
       currency: 'cad',
       customer: temp_customer.id,
       payment_method: paymentMethods.data[0].id,
       off_session: true,
       confirm: true,
-      application_fee_amount: (paymentTotal * 100 * myspotFee),
+      application_fee_amount: (paymentTotal * myspotFee).toFixed(0),
       transfer_data: {
         destination: drivewayOwner.account.id,
       },
@@ -469,6 +524,8 @@ module.exports = {
   deleteDriveway,
   checkForPaymentMethod,
   updatePaymentMethod,
+  accountStatus,
+  accountLink,
   reportUser,
   registerUserAsDriver,
 };
