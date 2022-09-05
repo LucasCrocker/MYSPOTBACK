@@ -213,9 +213,7 @@ const getDriveways = catchAsync(async (req, res) => {
   {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1 }
  )
 //  console.log("result: ", result);
-//  console.log("numTotalDriveways: ", numTotalDriveways);
-//  console.log("numVacantDriveways: ", numVacantDriveways);
- const quote = (numVacantDriveways/numTotalDriveways * 150) > 0.5 ? (numVacantDriveways/numTotalDriveways * 150).toFixed(2) : 0.5
+  const quote = (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5) > 0.5 ? (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5).toFixed(2) : 0.5
 
   // const filter = pick(req.query, ['name', 'role']);
   // const options = pick(req.query, ['sortBy', 'limit', 'page']);
@@ -411,17 +409,11 @@ const releaseDriveway = catchAsync(async (req, res) => {
     customer: temp_customer.id,
     type: 'card',
   });
-  console.log("Payment methods: ", paymentMethods);
-  console.log("PaymentMethods.data[0].id: ", paymentMethods.data[0].id);
-  const flatRate = 1;
+  // console.log("Payment methods: ", paymentMethods);
+  // console.log("PaymentMethods.data[0].id: ", paymentMethods.data[0].id);
+  const serviceFee = 1;
   let now = moment(new Date());
-  console.log("now.diff(bookedDate, 'minutes')", now.diff(bookedDate, 'minutes'));
-  let paymentTotal = ( ((now.diff(bookedDate, 'minutes') * price / 60 ) + flatRate) ).toFixed(2) * 100;
-  console.log("payment total actual", paymentTotal);
-  // paymentTotal = 15;
-  console.log("payment total test", paymentTotal);
-  console.log("payment total (paymentTotal * 100)", (paymentTotal));
-  console.log("paymentTotal * myspotFee", paymentTotal * myspotFee);
+  let paymentTotal = ( ((now.diff(bookedDate, 'minutes') * price / 60 ) + serviceFee) ).toFixed(2) * 100;
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
