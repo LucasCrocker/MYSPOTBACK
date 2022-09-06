@@ -39,11 +39,16 @@ const accountStatus = catchAsync(async (req, res) => {
     const accountObj = await stripe.accounts.retrieve(
       account.id
     );
-    const userObj = await userService.updateUserById(req.user._id, {account: accountObj});
-
+    let drivewayObj = user.driveway;
+    drivewayObj.charges_enabled = accountObj.charges_enabled;
     const balance = await stripe.balance.retrieve({
       stripeAccount: account.id
     });
+    drivewayObj.balance = balance.instant_available[0].amount;
+
+    const userObj = await userService.updateUserById(req.user._id, {driveway: drivewayObj});
+
+
     console.log("-----------AccountObj-----------", userObj)
     console.log("-----------balanceObj-----------", balance)
     res.send(userObj);
@@ -168,7 +173,7 @@ const getDriveways = catchAsync(async (req, res) => {
            minDistance: 0,
            key: "driveway.loc",
            spherical: true,
-           query: {'driveway.vacant': true  }
+           query: {'driveway.vacant': true, 'account.charges_enabled': true   }
         }
       },
       {
@@ -176,6 +181,10 @@ const getDriveways = catchAsync(async (req, res) => {
       }
     ]
   )
+  if (numVacantDriveways.length === 0) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'There are no spots currently available');
+  }
+
   const numTotalDriveways = await User.aggregate(
     [
       {
@@ -185,7 +194,8 @@ const getDriveways = catchAsync(async (req, res) => {
            maxDistance: 1000,
            minDistance: 0,
            key: "driveway.loc",
-           spherical: true
+           spherical: true,
+           query: {'account.charges_enabled': true   }
         }
       },
       {
@@ -212,8 +222,10 @@ const getDriveways = catchAsync(async (req, res) => {
   ]},
   {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1 }
  )
-//  console.log("result: ", result);
-  const quote = (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5) > 0.5 ? (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5).toFixed(2) : 0.5
+ console.log("numVacantDriveways[0].count: ", numVacantDriveways[0].count);
+ console.log("numTotalDriveways[0].count: ", numTotalDriveways[0].count);
+ const quote = (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5) > 0.5 ? (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5).toFixed(2) : 0.5
+ console.log("quote: ", quote);
 
   // const filter = pick(req.query, ['name', 'role']);
   // const options = pick(req.query, ['sortBy', 'limit', 'page']);
@@ -277,7 +289,7 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
   // user account active
   if (userCheck.account.charges_enabled) {
     req.body['vacant'] = true;
-    // req.body['account'] = account;
+    req.body['charges_enabled'] = userCheck.account.charges_enabled;
     req.body['loc'] = {
       type: 'Point',
       coordinates: [req.body.location.location.lng, req.body.location.location.lat]
@@ -316,7 +328,8 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
     });
 
     req.body['vacant'] = true;
-    // req.body['account'] = account;
+    req.body['charges_enabled'] = newAccount.charges_enabled;
+    req.body['balance'] = newAccount.balance;
     req.body['loc'] = {
       type: 'Point',
       coordinates: [req.body.location.location.lng, req.body.location.location.lat]
@@ -366,6 +379,8 @@ const bookDriveway = catchAsync(async (req, res) => {
   result.driveway.vacant = false;
   result.driveway.bookedBy = {
     user: req.user._id,
+    name: req.user.name,
+    plate: req.user.plate,
     lastModified: new Date()
   }
 
