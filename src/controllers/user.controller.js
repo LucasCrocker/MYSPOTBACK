@@ -39,11 +39,16 @@ const accountStatus = catchAsync(async (req, res) => {
     const accountObj = await stripe.accounts.retrieve(
       account.id
     );
-    const userObj = await userService.updateUserById(req.user._id, {account: accountObj});
-
+    let drivewayObj = user.driveway;
+    drivewayObj.charges_enabled = accountObj.charges_enabled;
     const balance = await stripe.balance.retrieve({
       stripeAccount: account.id
     });
+    drivewayObj.balance = balance.instant_available[0].amount;
+
+    const userObj = await userService.updateUserById(req.user._id, {driveway: drivewayObj});
+
+
     console.log("-----------AccountObj-----------", userObj)
     console.log("-----------balanceObj-----------", balance)
     res.send(userObj);
@@ -284,7 +289,7 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
   // user account active
   if (userCheck.account.charges_enabled) {
     req.body['vacant'] = true;
-    // req.body['account'] = account;
+    req.body['charges_enabled'] = userCheck.account.charges_enabled;
     req.body['loc'] = {
       type: 'Point',
       coordinates: [req.body.location.location.lng, req.body.location.location.lat]
@@ -323,7 +328,8 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
     });
 
     req.body['vacant'] = true;
-    // req.body['account'] = account;
+    req.body['charges_enabled'] = newAccount.charges_enabled;
+    req.body['balance'] = newAccount.balance;
     req.body['loc'] = {
       type: 'Point',
       coordinates: [req.body.location.location.lng, req.body.location.location.lat]
@@ -373,6 +379,8 @@ const bookDriveway = catchAsync(async (req, res) => {
   result.driveway.vacant = false;
   result.driveway.bookedBy = {
     user: req.user._id,
+    name: req.user.name,
+    plate: req.user.plate,
     lastModified: new Date()
   }
 
