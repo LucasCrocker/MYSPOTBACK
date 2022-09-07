@@ -35,10 +35,11 @@ const accountStatus = catchAsync(async (req, res) => {
     console.log("no account found for user")
     return user;
   }
-    let account = user.account;
+    let tempAccount = user.account;
     const accountObj = await stripe.accounts.retrieve(
-      account.id
+      tempAccount.id
     );
+    console.log("accountObj is on return: ", accountObj)
     let drivewayObj = user.driveway;
     drivewayObj.charges_enabled = accountObj.charges_enabled;
     const balance = await stripe.balance.retrieve({
@@ -46,12 +47,14 @@ const accountStatus = catchAsync(async (req, res) => {
     });
     drivewayObj.balance = balance.instant_available[0].amount;
 
-    const userObj = await userService.updateUserById(req.user._id, {driveway: drivewayObj});
+    const userObj = await userService.updateUserById(req.user._id, {account: accountObj, driveway: drivewayObj});
 
 
     console.log("-----------AccountObj-----------", userObj)
     console.log("-----------balanceObj-----------", balance)
-    res.send(userObj);
+    const { isEmailVerified, account, customer, password, flags, ...newUser} = newUser.toObject();
+
+    res.send(newUser);
 });
 const accountLink = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
@@ -286,8 +289,10 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
   let userCheck = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
+  console.log("Condition 1", userCheck.account != null );
+  console.log("Condition 2", userCheck.driveWay != null );
   // user account active
-  if (userCheck.account.charges_enabled) {
+  if (userCheck.account && userCheck.account.charges_enabled) {
     req.body['vacant'] = true;
     req.body['charges_enabled'] = userCheck.account.charges_enabled;
     req.body['loc'] = {
@@ -298,10 +303,9 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
     const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
     // console.log("user", newUser);
     // console.log("new user", user);  
-    res.send(newUser);
-  } else if (userCheck.account !== null) {
+    res.send(user);
+  } else if ((userCheck.account !== null && userCheck.account !== undefined) && (userCheck.driveway !== null && userCheck.driveway !== undefined)) {
     // user account inactive
-
     const accountLink = await stripe.accountLinks.create({
       account: userCheck.account.id,
       refresh_url: 'https://myspot-back.herokuapp.com/v1/auth/redirect',
@@ -488,7 +492,7 @@ const deleteDriveway = catchAsync(async (req, res) => {
     const { isEmailVerified, account, customer, password, flags, ...newUser} = userResult.toObject();
     console.log("deletedriveway new user:", newUser);
 
-    res.send(userResult);
+    res.send(newUser);
   }
 });
 
