@@ -31,7 +31,7 @@ const accountStatus = catchAsync(async (req, res) => {
   let user = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
-  if (user.account === null) {
+  if (user.account === null || user.account === undefined) {
     console.log("no account found for user")
     return user;
   }
@@ -43,26 +43,26 @@ const accountStatus = catchAsync(async (req, res) => {
     let drivewayObj = user.driveway;
     drivewayObj.charges_enabled = accountObj.charges_enabled;
     const balance = await stripe.balance.retrieve({
-      stripeAccount: account.id
+      stripeAccount: tempAccount.id
     });
     drivewayObj.balance = balance.instant_available[0].amount;
 
     const userObj = await userService.updateUserById(req.user._id, {account: accountObj, driveway: drivewayObj});
 
-
-    console.log("-----------AccountObj-----------", userObj)
+    console.log("-----------userObj-----------", userObj)
     console.log("-----------balanceObj-----------", balance)
-    const { isEmailVerified, account, customer, password, flags, ...newUser} = newUser.toObject();
-
+    const { isEmailVerified, account, customer, password, flags, ...newUser} = userObj.toObject();
+    console.log("Account status return: ", newUser);
     res.send(newUser);
 });
+
 const accountLink = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
 
   let user = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
-  if (user.account === null) {
+  if (user.account === null || user.account === undefined) {
     console.log("no account found for user")
     return user;
   }
