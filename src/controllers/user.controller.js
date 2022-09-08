@@ -515,14 +515,15 @@ const registerUserAsDriver = catchAsync(async (req, res) => {
   let user = await User.findOne(
     {"_id": ObjectId(req.user._id)},
     )
-  if(user) {
-    user.plate = req.body.plate;
-    user.inviteCode = req.body.inviteCode;
-    const userResult = await userService.updateUserById(req.user._id, user);
-    const { isEmailVerified, account, customer, password, ...newUser} = userResult.toObject();
-    res.send(newUser);
-  } else {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'User not found in registerUserAsDriver');
+  if(user === null || user === undefined) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'User not found in registerUserAsDriver.');
+  }  else {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid invite code.");
+    // user.plate = req.body.plate;
+    // user.inviteCode = req.body.inviteCode;
+    // const userResult = await userService.updateUserById(req.user._id, user);
+    // const { isEmailVerified, account, customer, password, ...newUser} = userResult.toObject();
+    // res.send(newUser);
   }
 });
 
