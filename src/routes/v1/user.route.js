@@ -25,6 +25,11 @@ router
   .route('/driveways')
   .post(auth('blanket'), validate(drivewayValidation.getDriveways), userController.getDriveways);
 
+  //TODO add validation
+router
+  .route('/set-schedule')
+  .post(auth('blanket'), userController.setDrivewaySchedule);
+
 router
   .route('/book-driveway')
   .post(auth('blanket'), validate(drivewayValidation.bookDriveway), userController.bookDriveway);
