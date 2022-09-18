@@ -324,7 +324,7 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
   console.log(req.body.location.location);
 
   if (drivewayOwner) {
-    throw new ApiError(httpStatus.BAD_REQUEST, 'This driveway is already listed.');
+    throw new ApiError(httpStatus.BAD_REQUEST, 'This spot is already listed.');
   }
 
   let userCheck = await User.findOne(
@@ -342,13 +342,13 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
       coordinates: [req.body.location.location.lng, req.body.location.location.lat]
     }
     req.body['schedule'] = {
-      mon: 000000000000000000000000,
-      tue: 000000000000000000000000,
-      wed: 000000000000000000000000,
-      thu: 000000000000000000000000,
-      fri: 000000000000000000000000,
-      sat: 000000000000000000000000,
-      sun: 000000000000000000000000,
+      mon: 0,
+      tue: 0,
+      wed: 0,
+      thu: 0,
+      fri: 0,
+      sat: 0,
+      sun: 0,
       lastModified: new Date()
     }
     const newUser = await userService.updateUserById(req.user._id, {driveway: req.body});
@@ -391,13 +391,13 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
       coordinates: [req.body.location.location.lng, req.body.location.location.lat]
     }
     req.body['schedule'] = {
-      mon: 000000000000000000000000,
-      tue: 000000000000000000000000,
-      wed: 000000000000000000000000,
-      thu: 000000000000000000000000,
-      fri: 000000000000000000000000,
-      sat: 000000000000000000000000,
-      sun: 000000000000000000000000,
+      mon: 0,
+      tue: 0,
+      wed: 0,
+      thu: 0,
+      fri: 0,
+      sat: 0,
+      sun: 0,
       lastModified: new Date()
     }
 
@@ -408,7 +408,42 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
   }
 });
 
-const setDrivewaySchedule = catchAsync(async (req, res) => {
+const updateDriveway = catchAsync(async (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+
+  const drivewayOwner = await User.findOne(
+    { $and: [
+      { "driveway.location.location": req.body.location.location },
+      { "driveway.location.description": req.body.location.description},
+      { "driveway.location.unit": req.body.location.unit}
+    ]}  
+  )
+
+  if (drivewayOwner) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'This spot is already listed.');
+  }
+
+  let loc = {
+    type: 'Point',
+    coordinates: [req.body.location.location.lng, req.body.location.location.lat]
+  }
+
+  const newUser = userService.updateUserById(
+    req.user._id, 
+    {
+      "driveway.location.location": req.body.location.location,
+      "driveway.location.description": req.body.location.description,
+      "driveway.location.unit": req.body.location.unit,
+      "driveway.loc": loc
+    }
+  );
+  
+  const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
+  
+  res.send(user);
+});
+
+const setDaySchedule = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
   let userCheck = await User.findOne(
     {"_id": ObjectId(req.user._id)},
@@ -418,13 +453,67 @@ const setDrivewaySchedule = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Cannot update schedule while spot is booked')
   }
 
-  const newUser = await userService.updateUserById(
-    req.user._id, 
-    {
-      driveway: req.body.driveway
+  let dayToUpdate = req.body.day;
+  let newUser;
+  switch (dayToUpdate) {
+    case 0: {
+      newUser = await userService.updateUserById(
+        req.user._id, 
+        {
+          mon: req.body.schedule
+        }
+      );
     }
-  );
-
+    case 1: {
+      newUser = await userService.updateUserById(
+        req.user._id, 
+        {
+          tue: req.body.schedule
+        }
+      );
+    }
+    case 2: {
+      newUser = await userService.updateUserById(
+        req.user._id, 
+        {
+          wed: req.body.schedule
+        }
+      );
+    }
+    case 3: {
+      newUser = await userService.updateUserById(
+        req.user._id, 
+        {
+          thu: req.body.schedule
+        }
+      );
+    }
+    case 4: {
+      newUser = await userService.updateUserById(
+        req.user._id, 
+        {
+          fri: req.body.schedule
+        }
+      );
+    }
+    case 5: {
+      newUser = await userService.updateUserById(
+        req.user._id, 
+        {
+          sat: req.body.schedule
+        }
+      );
+    }
+    case 6: {
+      newUser = await userService.updateUserById(
+        req.user._id, 
+        {
+          sun: req.body.schedule
+        }
+      );
+    }
+  }
+  
   const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
     // console.log("user", newUser);
     console.log("new user", user);  
@@ -613,9 +702,10 @@ module.exports = {
   getUser,
   updateUser,
   addDrivewayToUser,
+  updateDriveway,
   deleteUser,
   bookDriveway,
-  setDrivewaySchedule,
+  setDaySchedule,
   releaseDriveway,
   // setPaymentIntent,
   // processPaymentIntent,
