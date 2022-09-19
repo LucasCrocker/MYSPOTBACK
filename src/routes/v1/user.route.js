@@ -30,7 +30,6 @@ router
   .route('/driveways')
   .post(auth('blanket'), validate(drivewayValidation.getDriveways), userController.getDriveways);
 
-  //TODO add validation
 router
   .route('/set-day-schedule')
   .post(auth('blanket'), validate(drivewayValidation.setSchedule), userController.setDaySchedule);
@@ -69,7 +68,7 @@ router
 
 router
   .route('/report-user')
-  .get(auth('blanket'), userController.reportUser);  
+  .post(auth('blanket'), userController.reportUser);  
 
 router
   .route('/register-as-driver')

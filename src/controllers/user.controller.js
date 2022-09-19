@@ -667,14 +667,26 @@ const deleteDriveway = catchAsync(async (req, res) => {
 const reportUser = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
   console.log("report user:", req.body);
+  let userCheck = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+    )
   let reportedUser = await User.findOne(
-    {"plate": ObjectId(req.plate)},
+    {"plate": req.body.plate},
     )
   if(reportedUser) {
-    //TODO update user.flags
+    if (reportedUser.flags && reportedUser.flags.reportedForParkingWithoutBooking !== undefined) {
+      let temp = reportedUser.flags.reportedForParkingWithoutBooking + 1;
+      reportedUser.flags.reportedForParkingWithoutBooking = temp;
+    } else {
+      reportedUser.flags = {'reportedForParkingWithoutBooking': 1 };
+    }
+    console.log("reported user: ", reportedUser)
+    const newReportedUser = await userService.updateUserById(ObjectId(reportedUser._id), {flags: reportedUser.flags});
   } else {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User not found in reportUser');
   }
+  const { isEmailVerified, account, customer, password, flags, ...newUser} = userCheck.toObject();
+  res.send(newUser)
 });
 
 const registerUserAsDriver = catchAsync(async (req, res) => {
@@ -686,12 +698,12 @@ const registerUserAsDriver = catchAsync(async (req, res) => {
   if(user === null || user === undefined) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User not found in registerUserAsDriver.');
   }  else {
-    throw new ApiError(httpStatus.BAD_REQUEST, "Invalid invite code.");
-    // user.plate = req.body.plate;
-    // user.inviteCode = req.body.inviteCode;
-    // const userResult = await userService.updateUserById(req.user._id, user);
-    // const { isEmailVerified, account, customer, password, ...newUser} = userResult.toObject();
-    // res.send(newUser);
+    // throw new ApiError(httpStatus.BAD_REQUEST, "Invalid invite code.");
+    user.plate = req.body.plate;
+    user.inviteCode = req.body.inviteCode;
+    const userResult = await userService.updateUserById(req.user._id, user);
+    const { isEmailVerified, account, customer, password, flags, ...newUser} = userResult.toObject();
+    res.send(newUser);
   }
 });
 
