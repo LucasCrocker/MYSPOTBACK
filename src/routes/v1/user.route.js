@@ -31,7 +31,7 @@ router
   .post(auth('blanket'), validate(drivewayValidation.getDriveways), userController.getDriveways);
 
 router
-  .route('/set-day-schedule')
+  .route('/set-schedule')
   .post(auth('blanket'), validate(drivewayValidation.setSchedule), userController.setDaySchedule);
 
 router

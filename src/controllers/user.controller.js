@@ -428,14 +428,10 @@ const updateDriveway = catchAsync(async (req, res) => {
     coordinates: [req.body.location.location.lng, req.body.location.location.lat]
   }
 
+  //I hope to god this works \('_')/
   const newUser = userService.updateUserById(
     req.user._id, 
-    {
-      "driveway.location.location": req.body.location.location,
-      "driveway.location.description": req.body.location.description,
-      "driveway.location.unit": req.body.location.unit,
-      "driveway.loc": loc
-    }
+    { driveway: {location: req.body.location}, loc: loc }
   );
   
   const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
@@ -448,72 +444,42 @@ const setDaySchedule = catchAsync(async (req, res) => {
   let userCheck = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
-  
+
+  let dayToUpdate = req.body.day;
+  switch (dayToUpdate) {
+    case 0: {
+      userCheck.driveway.schedule.mon = req.body.schedule;
+    }
+    case 1: {
+      userCheck.driveway.schedule.tue = req.body.schedule;
+    }
+    case 2: {
+      userCheck.driveway.schedule.wed = req.body.schedule;
+    }
+    case 3: {
+      userCheck.driveway.schedule.thu = req.body.schedule;
+    }
+    case 4: {
+      userCheck.driveway.schedule.fri = req.body.schedule;
+    }
+    case 5: {
+      userCheck.driveway.schedule.sat = req.body.schedule;
+    }
+    case 6: {
+      userCheck.driveway.schedule.sun = req.body.schedule;
+    }
+  }
+
   if (userCheck.driveway.bookedBy) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Cannot update schedule while spot is booked')
   }
 
-  let dayToUpdate = req.body.day;
-  let newUser;
-  switch (dayToUpdate) {
-    case 0: {
-      newUser = await userService.updateUserById(
-        req.user._id, 
-        {
-          mon: req.body.schedule
-        }
-      );
-    }
-    case 1: {
-      newUser = await userService.updateUserById(
-        req.user._id, 
-        {
-          tue: req.body.schedule
-        }
-      );
-    }
-    case 2: {
-      newUser = await userService.updateUserById(
-        req.user._id, 
-        {
-          wed: req.body.schedule
-        }
-      );
-    }
-    case 3: {
-      newUser = await userService.updateUserById(
-        req.user._id, 
-        {
-          thu: req.body.schedule
-        }
-      );
-    }
-    case 4: {
-      newUser = await userService.updateUserById(
-        req.user._id, 
-        {
-          fri: req.body.schedule
-        }
-      );
-    }
-    case 5: {
-      newUser = await userService.updateUserById(
-        req.user._id, 
-        {
-          sat: req.body.schedule
-        }
-      );
-    }
-    case 6: {
-      newUser = await userService.updateUserById(
-        req.user._id, 
-        {
-          sun: req.body.schedule
-        }
-      );
-    }
-  }
-  
+  userCheck.driveway.schedule.lastModified = new Date();
+
+  const newUser = await userService.updateUserById(
+    req.user._id, { driveway: {schedule: userCheck.driveway.schedule}}
+  );
+
   const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
     // console.log("user", newUser);
     console.log("new user", user);  
@@ -567,8 +533,8 @@ const bookDriveway = catchAsync(async (req, res) => {
     lastModified: new Date(),
     driveway: result.driveway.location,
     lockedInPrice: userCheck.quote
-
   }
+
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, {booked: bookedDriveway});
   const user = await userService.updateUserById(result._id, {driveway: result.driveway});
   // console.log("here it is m8: ", userBookingDrivewayResult);

@@ -38,8 +38,8 @@ const updateDriveway = {
 
 const setSchedule = {
   body: Joi.object().keys({
-    day: Joi.string(),
-    schedule: Joi.binary()
+    day: Joi.number(),
+    schedule: Joi.number()
   })
 };
 
