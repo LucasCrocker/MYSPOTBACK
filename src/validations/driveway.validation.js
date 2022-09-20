@@ -3,15 +3,15 @@ const { password } = require('./custom.validation');
 
 const registerDriveway = {
   body: Joi.object().keys({
-    days: Joi.object().keys({
-      mon: Joi.binary(),
-      tue: Joi.binary(),
-      wed: Joi.binary(),
-      thu: Joi.binary(),
-      fri: Joi.binary(),
-      sat: Joi.binary(),
-      sun: Joi.binary(),
-    }),
+    // days: Joi.object().keys({
+    //   mon: Joi.binary(),
+    //   tue: Joi.binary(),
+    //   wed: Joi.binary(),
+    //   thu: Joi.binary(),
+    //   fri: Joi.binary(),
+    //   sat: Joi.binary(),
+    //   sun: Joi.binary(),
+    // }),
     location: Joi.object().keys({
       location: Joi.object().keys({
         lat: Joi.number(),
