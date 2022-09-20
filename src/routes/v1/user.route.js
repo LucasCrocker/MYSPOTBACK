@@ -35,6 +35,10 @@ router
   .post(auth('blanket'), validate(drivewayValidation.setSchedule), userController.setDaySchedule);
 
 router
+  .route('/set-paused')
+  .get(auth('blanket'), userController.togglePauseDriveway);
+
+router
   .route('/book-driveway')
   .post(auth('blanket'), validate(drivewayValidation.bookDriveway), userController.bookDriveway);
 

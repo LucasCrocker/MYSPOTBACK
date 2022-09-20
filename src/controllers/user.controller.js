@@ -264,7 +264,7 @@ const getDriveways = catchAsync(async (req, res) => {
    {'account.charges_enabled': true },
    {str: {$bitsAllSet: req.body.requestedTime}}
   ]},
-  {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1 }
+  {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1, "driveway.location.unit": 1 }
  )
  console.log("numVacantDriveways[0].count: ", numVacantDriveways[0].count);
  console.log("numTotalDriveways[0].count: ", numTotalDriveways[0].count);
@@ -486,6 +486,27 @@ const setDaySchedule = catchAsync(async (req, res) => {
     res.send(user);
 });
 
+const togglePauseDriveway = catchAsync(async (req, res) => {
+  const ObjectId = require('mongodb').ObjectId;
+  let userCheck = await User.findOne(
+    {"_id": ObjectId(req.user._id)},
+  );
+
+  if (userCheck.driveway.paused == false) {
+    userCheck.driveway.paused = true;
+  } else if (userCheck.driveway.paused == true) {
+    userCheck.driveway.paused = false
+  }
+
+  const newUser = await userService.updateUserById(
+    req.user._id, { driveway: {paused: userCheck.driveway.paused}}
+  );
+
+  const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
+
+  res.send(user);
+});
+
 const bookDriveway = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
 
@@ -684,6 +705,7 @@ module.exports = {
   deleteUser,
   bookDriveway,
   setDaySchedule,
+  togglePauseDriveway,
   releaseDriveway,
   // setPaymentIntent,
   // processPaymentIntent,
