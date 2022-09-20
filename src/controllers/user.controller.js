@@ -449,24 +449,31 @@ const setDaySchedule = catchAsync(async (req, res) => {
   switch (dayToUpdate) {
     case 0: {
       userCheck.driveway.schedule.mon = req.body.schedule;
+      break;
     }
     case 1: {
       userCheck.driveway.schedule.tue = req.body.schedule;
+      break;
     }
     case 2: {
       userCheck.driveway.schedule.wed = req.body.schedule;
+      break;
     }
     case 3: {
       userCheck.driveway.schedule.thu = req.body.schedule;
+      break;
     }
     case 4: {
       userCheck.driveway.schedule.fri = req.body.schedule;
+      break;
     }
     case 5: {
       userCheck.driveway.schedule.sat = req.body.schedule;
+      break;
     }
     case 6: {
       userCheck.driveway.schedule.sun = req.body.schedule;
+      break;
     }
   }
 
@@ -477,7 +484,7 @@ const setDaySchedule = catchAsync(async (req, res) => {
   userCheck.driveway.schedule.lastModified = new Date();
 
   const newUser = await userService.updateUserById(
-    req.user._id, { driveway: {schedule: userCheck.driveway.schedule}}
+    req.user._id, { driveway: { schedule: userCheck.driveway.schedule, ...userCheck.driveway}}
   );
 
   const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
