@@ -171,34 +171,82 @@ const getUser = catchAsync(async (req, res) => {
 function convertDayNumberToString(day) {
   switch (day) {
     case 0: {
-      return 'mon';
+      return 'sun';
     }
     case 1: {
-      return 'tue';
+      return 'mon';
     }
     case 2: {
-      return 'wed';
+      return 'tue';
     }
     case 3: {
-      return 'thu';
+      return 'wed';
     }
     case 4: {
-      return 'fri';
+      return 'thu';
     }
     case 5: {
-      return 'sat';
+      return 'fri';
     }
     case 6: {
-      return 'sun';
+      return 'sat';
     }
   }
 }
 
 const getDriveways = catchAsync(async (req, res) => {
   //allows us to check the appropriate day's bitmask
-  let str = `driveway.schedule.${convertDayNumberToString(new Date().getDay())}`;
+  let str = `${convertDayNumberToString(new Date().getDay())}`;
+  // let subQuery
+  // subQuery[convertDayNumberToString(new Date().getDay()] = {$bitsAllSet: req.body.requestedTime}
+  //  console.log("str:", str);
+  //  let query = {
+  //   driveway: {
+  //     schedule: {
+  //     mon: {},
+  //     tue: {},
+  //     wed: {},
+  //     thu: {},
+  //     fri: {},
+  //     sat: {},
+  //     sun: {}
+  //     }
+  //   }
+  //  };
+  // let query = {};
+  // query.driveway.schedule['tue'] = {$bitsAllSet: req.body.requestedTime};
+  // query.driveway.schedule[convertDayNumberToString(new Date().getDay())] = {$bitsAllSet: req.body.requestedTime};
   const numVacantDriveways = await User.aggregate(
     [
+      // { $let: {
+      //   vars: { str: `driveway.schedule.${convertDayNumberToString(new Date().getDay())}` },
+      //   $in: {
+      //     $geoNear: {
+      //       near: { type: "Point", coordinates: [req.body.location.location.lng, req.body.location.location.lat] },
+      //       distanceField: "dist.calculated",
+      //       maxDistance: 1000,
+      //       minDistance: 0,
+      //       key: "driveway.loc",
+      //       spherical: true,
+      //       query: 
+      //       {
+      //         // 'driveway.vacant': true,
+      //         // 'driveway.paused': false,
+      //         // 'account.charges_enabled': true,
+      //         str: {$bitsAllSet: req.body.requestedTime}
+      //         // str: {$bitsAllSet: req.body.requestedTime}
+      //       }
+      //     },
+      //   }
+        
+      // }
+      
+      // },
+      // {
+      //   $count: "count"
+      // }
+
+
       {
         $geoNear: {
           near: { type: "Point", coordinates: [req.body.location.location.lng, req.body.location.location.lat] },
@@ -207,7 +255,8 @@ const getDriveways = catchAsync(async (req, res) => {
           minDistance: 0,
           key: "driveway.loc",
           spherical: true,
-          query: {
+          query: 
+          {
             'driveway.vacant': true,
             'driveway.paused': false,
             'account.charges_enabled': true,
@@ -262,7 +311,7 @@ const getDriveways = catchAsync(async (req, res) => {
    {'driveway.vacant': true  },
    {'driveway.paused': false },
    {'account.charges_enabled': true },
-   {str: {$bitsAllSet: req.body.requestedTime}}
+   {'driveway.schedule.tue': {$bitsAllSet: req.body.requestedTime}}
   ]},
   {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1, "driveway.location.unit": 1 }
  )

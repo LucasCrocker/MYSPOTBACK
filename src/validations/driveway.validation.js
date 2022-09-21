@@ -50,8 +50,9 @@ const getDriveways = {
         lat: Joi.number(),
         lng: Joi.number()
       }),
-      description: Joi.string()
+      description: Joi.string(),
     }),
+    requestedTime: Joi.number()
   }),
 };
 
