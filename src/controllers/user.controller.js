@@ -571,7 +571,8 @@ const bookDriveway = catchAsync(async (req, res) => {
     idOfDriveway: result._id,
     lastModified: new Date(),
     driveway: result.driveway.location,
-    lockedInPrice: userCheck.quote
+    lockedInPrice: userCheck.quote,
+    duration: req.body.duration
   }
 
   const userBookingDrivewayResult = await userService.updateUserById(req.user._id, {booked: bookedDriveway});
