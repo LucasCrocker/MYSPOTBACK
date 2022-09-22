@@ -195,13 +195,13 @@ function convertDayNumberToString(day) {
 }
 
 const getDriveways = catchAsync(async (req, res) => {
-  // req.body.requestedTime = 64512;
-  // req.body.requestedTime = 16777215;
+
   //allows us to check the appropriate day's bitmask
-  let str = `${convertDayNumberToString(new Date().getDay())}`;
+  // let str = `${convertDayNumberToString(new Date().getDay())}`;
   let queryObj = {};
   // queryObj['driveway']['schedule']['tue'] = {$bitsAllSet: req.body.requestedTime};
-  queryObj['driveway.schedule.' + convertDayNumberToString(new Date().getDay())] = {$bitsAllSet: req.body.requestedTime};
+  queryObj['driveway.schedule.' + convertDayNumberToString(new Date().getDay())] = {$bitsAllSet: req.body.requestedTime || 0};
+  console.log("requestedTime", req.body.requestedTime, queryObj);
   const numVacantDriveways = await User.aggregate(
     [
 
