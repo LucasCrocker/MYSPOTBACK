@@ -67,6 +67,7 @@ const bookDriveway = {
       description: Joi.string(),
       id: Joi.string().hex().length(24)
     }),
+    duration: Joi.number()
   }),
 };
 
