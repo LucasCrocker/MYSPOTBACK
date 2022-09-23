@@ -8,7 +8,7 @@ const moment =  require('moment')
 
 // Set your secret key. Remember to switch to your live secret key in production.
 // See your keys here: https://dashboard.stripe.com/apikeys
-const stripe = require('stripe')('sk_test_51LZlAiBPaG0NtDBCYaZFxWwYX9HwjdH86FW69v12OUcABN57tYriwJtfiZVLoUQOhPsHf5hnIkUwA9ZNPqbOMtyv00cwMjjDC5');
+const stripe = require('stripe')('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');
 
 const checkForPaymentMethod = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
