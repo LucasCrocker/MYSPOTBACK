@@ -17,22 +17,23 @@ const registerDriveway = {
         lat: Joi.number(),
         lng: Joi.number()
       }),
-      description: Joi.string(),
-      unit: Joi.string()
+      description: Joi.string()
     }),
+    unit: Joi.string().allow(null, '')
   }),
 };
 
 const updateDriveway = {
   body: Joi.object().keys({
-    location: Joi.object().keys({
+    location: Joi.object().keys({ 
       location: Joi.object().keys({
         lat: Joi.number(),
         lng: Joi.number()
       }),
-      description: Joi.string(),
-      unit: Joi.string()
-    })
+      description: Joi.string()
+      
+    }),
+    unit: Joi.string().allow(null, '')
   }),
 };
 

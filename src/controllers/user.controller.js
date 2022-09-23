@@ -217,9 +217,7 @@ const getDriveways = catchAsync(async (req, res) => {
           {...{
             'driveway.vacant': true,
             'driveway.paused': false,
-            'account.charges_enabled': true,
-            // str: {$bitsAllSet: req.body.requestedTime}
-            
+            'account.charges_enabled': true,         
           },
           ...queryObj}
         }
@@ -271,7 +269,6 @@ const getDriveways = catchAsync(async (req, res) => {
    {'driveway.vacant': true  },
    {'driveway.paused': false },
    {'account.charges_enabled': true },
-  //  {'driveway.schedule.tue': {$bitsAllSet: req.body.requestedTime}}
     queryObj
   ]},
   {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1, "driveway.location.unit": 1 }
@@ -329,7 +326,7 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
     { $and: [
       { "driveway.location.location": req.body.location.location },
       { "driveway.location.description": req.body.location.description},
-      { "driveway.location.unit": req.body.location.unit}
+      { "driveway.location.unit": req.body.unit}
     ]}  
   )
   console.log(req.body.location.location);
@@ -421,12 +418,12 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
 
 const updateDriveway = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
-
+  console.log(req.body);
   const drivewayOwner = await User.findOne(
     { $and: [
       { "driveway.location.location": req.body.location.location },
       { "driveway.location.description": req.body.location.description},
-      { "driveway.location.unit": req.body.location.unit}
+      { "driveway.location.unit": req.body.unit}
     ]}  
   )
 
@@ -434,17 +431,28 @@ const updateDriveway = catchAsync(async (req, res) => {
     throw new ApiError(httpStatus.BAD_REQUEST, 'This spot is already listed.');
   }
 
+  if(req.user.driveway.bookedBy) {
+    throw new ApiError(httpStatus.BAD_REQUEST, 'You cannot update your spot address while your spot is booked.');
+  }
+
   let loc = {
     type: 'Point',
     coordinates: [req.body.location.location.lng, req.body.location.location.lat]
   }
+  
+  userCheck = await User.findOne(
+    {"_id": ObjectId(req.user._id)}
+  )
+  userCheck.driveway.location = req.body.location;
+  userCheck.driveway.loc = loc;
+  userCheck.driveway.unit = req.body.unit;
 
   //I hope to god this works \('_')/
-  const newUser = userService.updateUserById(
+  const newUser = await userService.updateUserById(
     req.user._id, 
-    { driveway: {location: req.body.location}, loc: loc }
+    userCheck
   );
-  
+  console.log(newUser.driveway);
   const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
   
   res.send(user);
@@ -510,17 +518,20 @@ const togglePauseDriveway = catchAsync(async (req, res) => {
     {"_id": ObjectId(req.user._id)},
   );
 
-  if (userCheck.driveway.paused == false) {
-    userCheck.driveway.paused = true;
-  } else if (userCheck.driveway.paused == true) {
-    userCheck.driveway.paused = false
-  }
+  // console.log("usercheck1", userCheck);
+  // if (userCheck.driveway.paused == false) {
+  //   userCheck.driveway.paused = true;
+  // } else if (userCheck.driveway.paused == true) {
+  //   userCheck.driveway.paused = false
+  // }
+  // console.log("usercheck2", userCheck);
 
   const newUser = await userService.updateUserById(
-    req.user._id, { driveway: {paused: userCheck.driveway.paused}}
+    req.user._id, {"driveway.paused": !userCheck.driveway.paused}
   );
 
   const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
+  console.log("newUser", user);
 
   res.send(user);
 });
