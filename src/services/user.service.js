@@ -3,7 +3,7 @@ const { User } = require('../models');
 const ApiError = require('../utils/ApiError');
 // Set your secret key. Remember to switch to your live secret key in production.
 // See your keys here: https://dashboard.stripe.com/apikeys
-const stripe = require('stripe')('sk_test_51LZlAiBPaG0NtDBCYaZFxWwYX9Hwjsk_live_51LZlAiBPaG0NtDBC9KlY1qXBHzYi9NFscynBDitxo5bWYnpiijDBkAlqZV3IeiL0brBGKO6lTtIitqhj1hFuIMxY00yx1TVbEidH86FW69v12OUcABN57tYriwJtfiZVLoUQOhPsHf5hnIkUwA9ZNPqbOMtyv00cwMjjDC5');
+const stripe = require('stripe')('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');
 
 /**
  * Create a user
