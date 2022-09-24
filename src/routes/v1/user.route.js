@@ -16,6 +16,11 @@ router
   .route('/register-driveway')
   .post(auth('blanket'), validate(drivewayValidation.registerDriveway), userController.addDrivewayToUser);
 
+  
+router
+  .route('/update-driveway')
+  .post(auth('blanket'), validate(drivewayValidation.updateDriveway), userController.updateDriveway);
+
 // router
 //   .route('/booking-status')
 //   .get(auth('blanket'), validate(drivewayValidation.getBookingStatus), userController.getBookingStatus);
@@ -24,6 +29,14 @@ router
 router
   .route('/driveways')
   .post(auth('blanket'), validate(drivewayValidation.getDriveways), userController.getDriveways);
+
+router
+  .route('/set-schedule')
+  .post(auth('blanket'), validate(drivewayValidation.setSchedule), userController.setDaySchedule);
+
+router
+  .route('/set-paused')
+  .get(auth('blanket'), userController.togglePauseDriveway);
 
 router
   .route('/book-driveway')
@@ -59,7 +72,7 @@ router
 
 router
   .route('/report-user')
-  .get(auth('blanket'), userController.reportUser);  
+  .post(auth('blanket'), userController.reportUser);  
 
 router
   .route('/register-as-driver')
