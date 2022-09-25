@@ -527,7 +527,7 @@ const togglePauseDriveway = catchAsync(async (req, res) => {
   console.log("usercheck2", userCheck);
 
   const newUser = await userService.updateUserById(
-    req.user._id, {"driveway.paused": userCheck.driveway.paused}
+    req.user._id, {"driveway": userCheck.driveway}
   );
 
   const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
