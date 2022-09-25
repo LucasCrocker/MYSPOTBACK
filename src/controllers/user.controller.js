@@ -1,5 +1,5 @@
 require('dotenv').config()
-// console.log("dotenv:::", process.env.stripe_secret_key);
+console.log("dotenv:::", process.env.stripe_secret_key);
 
 const httpStatus = require('http-status');
 const pick = require('../utils/pick');
