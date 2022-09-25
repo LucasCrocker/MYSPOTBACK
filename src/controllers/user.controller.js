@@ -110,7 +110,7 @@ const paymentSheet = catchAsync(async (req, res) => {
     setupIntent: setupIntent.client_secret,
     ephemeralKey: ephemeralKey.secret,
     customer: customer.id,
-    publishableKey: 'pk_test_51LZlAiBPaG0NtDBCN9LceoWeCkacRMmrY3EQcNtJCEcjrWGnzJudSd0fH97NGAiFFSzXaDG0OkrzWTno0ppcU84n007mQUmu3b'
+    publishableKey: 'pk_live_51LZlAiBPaG0NtDBC5f8OcHuZcRtuVAThdXaVi2qesglhR0ENepJXqhbZB4azjA5XZKUD3cGFrRCtNhLXt6VUUlDZ00ocEqkqiP',
   })
 });
 
