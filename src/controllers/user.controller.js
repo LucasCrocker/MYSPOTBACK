@@ -8,7 +8,7 @@ const moment =  require('moment')
 
 // Set your secret key. Remember to switch to your live secret key in production.
 // See your keys here: https://dashboard.stripe.com/apikeys
-const stripe = require('stripe')('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');
+const stripe = require('stripe')('sk_test_51LZlAiBPaG0NtDBCYaZFxWwYX9HwjdH86FW69v12OUcABN57tYriwJtfiZVLoUQOhPsHf5hnIkUwA9ZNPqbOMtyv00cwMjjDC5');
 
 const checkForPaymentMethod = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
@@ -393,7 +393,7 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
 
     req.body['vacant'] = true;
     req.body['paused'] = false;
-    req.body['charges_enabled'] = userCheck.account.charges_enabled;
+    req.body['charges_enabled'] = newAccount.charges_enabled;
     req.body['loc'] = {
       type: 'Point',
       coordinates: [req.body.location.location.lng, req.body.location.location.lat]
@@ -518,16 +518,16 @@ const togglePauseDriveway = catchAsync(async (req, res) => {
     {"_id": ObjectId(req.user._id)},
   );
 
-  // console.log("usercheck1", userCheck);
-  // if (userCheck.driveway.paused == false) {
-  //   userCheck.driveway.paused = true;
-  // } else if (userCheck.driveway.paused == true) {
-  //   userCheck.driveway.paused = false
-  // }
-  // console.log("usercheck2", userCheck);
+  console.log("usercheck1", userCheck);
+  if (userCheck.driveway.paused == false) {
+    userCheck.driveway.paused = true;
+  } else if (userCheck.driveway.paused == true) {
+    userCheck.driveway.paused = false
+  }
+  console.log("usercheck2", userCheck);
 
   const newUser = await userService.updateUserById(
-    req.user._id, {"driveway.paused": !userCheck.driveway.paused}
+    req.user._id, {"driveway": userCheck.driveway}
   );
 
   const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();

@@ -15,7 +15,7 @@ const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utils/ApiError');
 const YOUR_DOMAIN = 'http://localhost:3000';
 const app = express();
-const stripe = require('stripe')('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');
+const stripe = require('stripe')('sk_test_Hrs6SAopgFPF0bZXSN3f6ELN');
 
 if (config.env !== 'test') {
   app.use(morgan.successHandler);
