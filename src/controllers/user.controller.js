@@ -1,6 +1,4 @@
 require('dotenv').config()
-console.log("dotenv:::", process.env.stripe_secret_key);
-
 const httpStatus = require('http-status');
 const pick = require('../utils/pick');
 const ApiError = require('../utils/ApiError');
@@ -12,7 +10,8 @@ const moment =  require('moment')
 // Set your secret key. Remember to switch to your live secret key in production.
 // See your keys here: https://dashboard.stripe.com/apikeys
 const stripe_secret_key = process.env.stripe_secret_key
-const stripe = require('stripe')(stripe_secret_key);
+const stripe_test_key = process.env.stripe_test_key
+const stripe = require('stripe')(stripe_test_key);
 const checkForPaymentMethod = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
 

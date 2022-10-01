@@ -9,6 +9,13 @@ const redirect = catchAsync(async (req, res) => {
   res.redirect("myspot://home");
 });
 
+const passwordResetRedirect = catchAsync(async (req, res) => {
+  console.log("token:", req.query.token);
+  // redirectLink = `myspot://passwordReset/${req.query.token}`;
+  redirectLink = `exp://192.168.0.62:19000/--/passwordReset/${req.query.token}`;
+  res.redirect(redirectLink);
+});
+
 const register = catchAsync(async (req, res) => {
   console.log("register", req.body);
   const newUser = await userService.createUser(req.body);
@@ -41,6 +48,7 @@ const refreshTokens = catchAsync(async (req, res) => {
 });
 
 const forgotPassword = catchAsync(async (req, res) => {
+  console.log("inside forgotPassword")
   const resetPasswordToken = await tokenService.generateResetPasswordToken(req.body.email);
   await emailService.sendResetPasswordEmail(req.body.email, resetPasswordToken);
   res.status(httpStatus.NO_CONTENT).send();
@@ -71,5 +79,6 @@ module.exports = {
   resetPassword,
   sendVerificationEmail,
   verifyEmail,
-  redirect
+  redirect,
+  passwordResetRedirect
 };
