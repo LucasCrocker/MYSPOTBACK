@@ -11,8 +11,8 @@ const redirect = catchAsync(async (req, res) => {
 
 const passwordResetRedirect = catchAsync(async (req, res) => {
   console.log("token:", req.query.token);
-  // redirectLink = `myspot://passwordReset/${req.query.token}`;
-  redirectLink = `exp://192.168.0.62:19000/--/passwordReset/${req.query.token}`;
+  // const redirectLink = `myspot://passwordReset/${req.query.token}`;
+  const redirectLink = `exp://192.168.0.62:19000/--/passwordReset/${req.query.token}`;
   res.redirect(redirectLink);
 });
 
@@ -48,13 +48,14 @@ const refreshTokens = catchAsync(async (req, res) => {
 });
 
 const forgotPassword = catchAsync(async (req, res) => {
-  console.log("inside forgotPassword")
+  // console.log("inside forgotPassword")
   const resetPasswordToken = await tokenService.generateResetPasswordToken(req.body.email);
   await emailService.sendResetPasswordEmail(req.body.email, resetPasswordToken);
   res.status(httpStatus.NO_CONTENT).send();
 });
 
 const resetPassword = catchAsync(async (req, res) => {
+  // console.log("Inside pass reset:", req);
   await authService.resetPassword(req.query.token, req.body.password);
   res.status(httpStatus.NO_CONTENT).send();
 });
