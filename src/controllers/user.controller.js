@@ -42,7 +42,7 @@ const accountStatus = catchAsync(async (req, res) => {
   const accountObj = await stripe.accounts.retrieve(
     tempAccount.id
   );
-  console.log("accountObj is on return: ", accountObj)
+  // console.log("accountObj is on return: ", accountObj)
 
   let drivewayObj = user.driveway;
   if (drivewayObj !== null && drivewayObj !== undefined) {
@@ -58,7 +58,7 @@ const accountStatus = catchAsync(async (req, res) => {
   // console.log("-----------userObj-----------", userObj)
   // console.log("-----------balanceObj-----------", balance)
   const { isEmailVerified, account, customer, password, flags, ...newUser} = userObj.toObject();
-  console.log("Account status return: ", newUser);
+  // console.log("Account status return: ", newUser);
   res.send(newUser);
 });
 
@@ -81,7 +81,7 @@ const accountLink = catchAsync(async (req, res) => {
       type: 'account_onboarding',
     });
 
-    console.log(accountLink);
+    // console.log(accountLink);
     res.send(accountLink);
 
 });
@@ -109,7 +109,8 @@ const paymentSheet = catchAsync(async (req, res) => {
     setupIntent: setupIntent.client_secret,
     ephemeralKey: ephemeralKey.secret,
     customer: customer.id,
-    publishableKey: 'pk_live_51LZlAiBPaG0NtDBC5f8OcHuZcRtuVAThdXaVi2qesglhR0ENepJXqhbZB4azjA5XZKUD3cGFrRCtNhLXt6VUUlDZ00ocEqkqiP',
+    publishableKey: 'pk_test_51LZlAiBPaG0NtDBCN9LceoWeCkacRMmrY3EQcNtJCEcjrWGnzJudSd0fH97NGAiFFSzXaDG0OkrzWTno0ppcU84n007mQUmu3b',
+    // publishableKey: 'pk_live_51LZlAiBPaG0NtDBC5f8OcHuZcRtuVAThdXaVi2qesglhR0ENepJXqhbZB4azjA5XZKUD3cGFrRCtNhLXt6VUUlDZ00ocEqkqiP',
   })
 });
 
@@ -203,7 +204,7 @@ const getDriveways = catchAsync(async (req, res) => {
   let queryObj = {};
   // queryObj['driveway']['schedule']['tue'] = {$bitsAllSet: req.body.requestedTime};
   queryObj['driveway.schedule.' + convertDayNumberToString(new Date().getDay())] = {$bitsAllSet: req.body.requestedTime || 0};
-  console.log("requestedTime", req.body.requestedTime, queryObj);
+  // console.log("requestedTime", req.body.requestedTime, queryObj);
   const numVacantDriveways = await User.aggregate(
     [
 
@@ -275,17 +276,17 @@ const getDriveways = catchAsync(async (req, res) => {
   ]},
   {_id: 1, "driveway.location.location": 1, "driveway.location.description": 1, "driveway.location.unit": 1 }
  )
- console.log("numVacantDriveways[0].count: ", numVacantDriveways[0].count);
- console.log("numTotalDriveways[0].count: ", numTotalDriveways[0].count);
+//  console.log("numVacantDriveways[0].count: ", numVacantDriveways[0].count);
+//  console.log("numTotalDriveways[0].count: ", numTotalDriveways[0].count);
  const quote = (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5) > 0.5 ? (1.5 - (numVacantDriveways[0].count / numTotalDriveways[0].count) * 1.5).toFixed(2) : 0.5
- console.log("quote: ", quote);
+//  console.log("quote: ", quote);
 
   // const filter = pick(req.query, ['name', 'role']);
   // const options = pick(req.query, ['sortBy', 'limit', 'page']);
   // const result = await userService.queryUsers(filter, options);
   await userService.updateUserById(req.user._id, {quote: quote});
   // let bestSpot = result[0]
-  console.log("result:", result)
+  // console.log("result:", result)
   // let { isEmailVerified, account, customer, password, ...bestSpot} = result[0].toObject();
 
   const random1 = Math.floor(Math.random() * 10)
@@ -323,7 +324,7 @@ const updateUser = catchAsync(async (req, res) => {
 const addDrivewayToUser = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
   console.log("Inside addDrivewayToUser");
-  console.log('req:', req.body);
+  // console.log('req:', req.body);
   const drivewayOwner = await User.findOne(
     { $and: [
       { "driveway.location.location": req.body.location.location },
@@ -331,7 +332,7 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
       { "driveway.location.unit": req.body.unit}
     ]}  
   )
-  console.log(req.body.location.location);
+  // console.log(req.body.location.location);
 
   if (drivewayOwner) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'This spot is already listed.');
@@ -340,8 +341,8 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
   let userCheck = await User.findOne(
     {"_id": ObjectId(req.user._id)},
   )
-  console.log("Condition 1", userCheck.account != null );
-  console.log("Condition 2", userCheck.driveWay != null );
+  // console.log("Condition 1", userCheck.account != null );
+  // console.log("Condition 2", userCheck.driveWay != null );
   // user account active
   if (userCheck.account && userCheck.account.charges_enabled) {
     req.body['vacant'] = true;
@@ -364,7 +365,7 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
     const newUser = await userService.updateUserById(req.user._id, {driveway: req.body});
     const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
     // console.log("user", newUser);
-    console.log("new user", user);  
+    // console.log("new user", user);  
     res.send(user);
   } else if ((userCheck.account !== null && userCheck.account !== undefined) && (userCheck.driveway !== null && userCheck.driveway !== undefined)) {
     // user account inactive
@@ -375,7 +376,7 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
       type: 'account_onboarding',
     });
 
-    console.log(accountLink);
+    // console.log(accountLink);
     res.send(accountLink);
   } else {
   // user has no account
@@ -413,14 +414,14 @@ const addDrivewayToUser = catchAsync(async (req, res) => {
 
     const user = await userService.updateUserById(req.user._id, {account: newAccount, driveway: req.body});
     // res.send(user);
-    console.log(accountLink);
+    // console.log(accountLink);
     res.send(accountLink);
   }
 });
 
 const updateDriveway = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
-  console.log(req.body);
+  // console.log("in da club",req.body);
   const drivewayOwner = await User.findOne(
     { $and: [
       { "driveway.location.location": req.body.location.location },
@@ -451,10 +452,9 @@ const updateDriveway = catchAsync(async (req, res) => {
 
   //I hope to god this works \('_')/
   const newUser = await userService.updateUserById(
-    req.user._id, 
-    userCheck
+    req.user._id, { driveway: { unit: userCheck.driveway.unit, location: userCheck.driveway.location, loc: userCheck.driveway.loc, ...userCheck.driveway}}
   );
-  console.log(newUser.driveway);
+  // console.log("in da club2", newUser.driveway);
   const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
   
   res.send(user);
@@ -510,7 +510,7 @@ const setDaySchedule = catchAsync(async (req, res) => {
 
   const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
     // console.log("user", newUser);
-    console.log("new user", user);  
+    // console.log("new user", user);  
     res.send(user);
 });
 
@@ -520,20 +520,20 @@ const togglePauseDriveway = catchAsync(async (req, res) => {
     {"_id": ObjectId(req.user._id)},
   );
 
-  console.log("usercheck1", userCheck);
+  // console.log("usercheck1", userCheck);
   if (userCheck.driveway.paused == false) {
     userCheck.driveway.paused = true;
   } else if (userCheck.driveway.paused == true) {
     userCheck.driveway.paused = false
   }
-  console.log("usercheck2", userCheck);
+  // console.log("usercheck2", userCheck);
 
   const newUser = await userService.updateUserById(
     req.user._id, {"driveway": userCheck.driveway}
   );
 
   const { isEmailVerified, account, customer, password, flags, ...user} = newUser.toObject();
-  console.log("newUser", user);
+  // console.log("newUser", user);
 
   res.send(user);
 });
@@ -558,7 +558,7 @@ const bookDriveway = catchAsync(async (req, res) => {
       {"_id": ObjectId(req.body.location.id)},
     ]}
   )
-  console.log("result account fuck up guy", result);
+  // console.log("result account fuck up guy", result);
   if (!(result.account)) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'Driveway owner has no account');
   }
@@ -584,6 +584,7 @@ const bookDriveway = catchAsync(async (req, res) => {
     idOfDriveway: result._id,
     lastModified: new Date(),
     driveway: result.driveway.location,
+    unit: result.driveway.unit,
     lockedInPrice: userCheck.quote,
     duration: req.body.duration
   }
@@ -593,7 +594,7 @@ const bookDriveway = catchAsync(async (req, res) => {
   // console.log("here it is m8: ", userBookingDrivewayResult);
   const { isEmailVerified, account, customer, password, flags, ...userBookingDriveway} = userBookingDrivewayResult.toObject();
   // console.log("user", userBookingDrivewayResult);
-  console.log("user booking driveway: ", userBookingDriveway);  
+  // console.log("user booking driveway: ", userBookingDriveway);  
   res.send(userBookingDriveway);
 });
 
@@ -641,21 +642,21 @@ const releaseDriveway = catchAsync(async (req, res) => {
         destination: drivewayOwner.account.id,
       },
     });
-    console.log("payment success", paymentIntent);
+    // console.log("payment success", paymentIntent);
     
     // userBookingDrivewayResult
     const { isEmailVerified, account, customer, password, flags, ...newUser} = userBookingDrivewayResult.toObject();
-    console.log("releaseDriveway new user:", newUser);
+    // console.log("releaseDriveway new user:", newUser);
     res.send(newUser);
   } catch (err) {
     // Error code will be authentication_required if authentication is needed
-    console.log('Error code is: ', err.code);
+    // console.log('Error code is: ', err.code);
     const paymentIntentRetrieved = await stripe.paymentIntents.retrieve(err.raw.payment_intent.id);
     (userBookingDrivewayResult.flags) ? 
       userBookingDrivewayResult.flags.paymentIntentRetrievedErr = paymentIntentRetrieved
       :
       userBookingDrivewayResult.flags = {'paymentIntentRetrievedErr': paymentIntentRetrieved}
-    console.log('PI retrieved: ', paymentIntentRetrieved.id);
+    // console.log('PI retrieved: ', paymentIntentRetrieved.id);
     throw new ApiError(httpStatus.BAD_REQUEST, 'Payment failed - please contact administrator');
   }
 });
@@ -666,7 +667,7 @@ const deleteUser = catchAsync(async (req, res) => {
 });
 
 const deleteDriveway = catchAsync(async (req, res) => {
-  console.log('in deleteDriveway');
+  // console.log('in deleteDriveway');
   const ObjectId = require('mongodb').ObjectId;
   let drivewayOwner = await User.findOne(
     {"_id": ObjectId(req.user._id)},
@@ -678,14 +679,14 @@ const deleteDriveway = catchAsync(async (req, res) => {
     drivewayOwner.driveway = null;
     const userResult = await userService.updateUserById(req.user._id, {driveway: drivewayOwner.driveway});
     const { isEmailVerified, account, customer, password, flags, ...newUser} = userResult.toObject();
-    console.log("deletedriveway new user:", newUser);
+    // console.log("deletedriveway new user:", newUser);
     res.send(newUser);
   }
 });
 
 const reportUser = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
-  console.log("report user:", req.body);
+  // console.log("report user:", req.body);
   let userCheck = await User.findOne(
     {"_id": ObjectId(req.user._id)},
     )
@@ -699,7 +700,7 @@ const reportUser = catchAsync(async (req, res) => {
     } else {
       reportedUser.flags = {'reportedForParkingWithoutBooking': 1 };
     }
-    console.log("reported user: ", reportedUser)
+    // console.log("reported user: ", reportedUser)
     const newReportedUser = await userService.updateUserById(ObjectId(reportedUser._id), {flags: reportedUser.flags});
   } else {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User not found in reportUser');
@@ -710,16 +711,18 @@ const reportUser = catchAsync(async (req, res) => {
 
 const registerUserAsDriver = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
-  console.log("register user as driver:", req.body);
+  // console.log("register user as driver:", req.body);
   let user = await User.findOne(
     {"_id": ObjectId(req.user._id)},
     )
+  let userCheck = await User.findOne({"plate" : req.body.plate});
   if(user === null || user === undefined) {
     throw new ApiError(httpStatus.BAD_REQUEST, 'User not found in registerUserAsDriver.');
-  }  else {
+  } else if (userCheck) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "That license plate has already been registered.")
+  } else {
     // throw new ApiError(httpStatus.BAD_REQUEST, "Invalid invite code.");
     user.plate = req.body.plate;
-    user.inviteCode = req.body.inviteCode;
     const userResult = await userService.updateUserById(req.user._id, user);
     const { isEmailVerified, account, customer, password, flags, ...newUser} = userResult.toObject();
     res.send(newUser);

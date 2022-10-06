@@ -22,7 +22,7 @@ const createUser = async (userBody) => {
   }
   const customer = await stripe.customers.create();
   userBody.customer = customer;
-  console.log("customer: ", customer);
+  // console.log("customer: ", customer);
   // const user = await userService.createUser(req.body);
   return User.create(userBody);
 };

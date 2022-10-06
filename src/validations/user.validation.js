@@ -48,7 +48,6 @@ const deleteUser = {
 const registerUserAsDriver = {
   params: Joi.object().keys({
     plate: Joi.string(),
-    inviteCode: Joi.string()
   }),
 };
 
