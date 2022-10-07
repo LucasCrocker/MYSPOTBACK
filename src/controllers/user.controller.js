@@ -320,6 +320,45 @@ const updateUser = catchAsync(async (req, res) => {
   res.send(user);
 });
 
+
+const addDrivewayNoAccount = catchAsync(async (req, res) => {
+  // user has no account
+  const newAccount = await stripe.accounts.create({
+    country: 'CA',
+    type: 'express',
+    capabilities: {card_payments: {requested: true}, transfers: {requested: true}},
+    business_type: 'individual',
+  });
+
+  const accountLink = await stripe.accountLinks.create({
+    account: newAccount.id,
+    refresh_url: 'https://myspot-back.herokuapp.com/v1/auth/redirect',
+    return_url: 'https://myspot-back.herokuapp.com/v1/auth/redirect',
+    type: 'account_onboarding',
+  });
+
+  req.body['vacant'] = true;
+  req.body['paused'] = false;
+  req.body['charges_enabled'] = newAccount.charges_enabled;
+  req.body['loc'] = {
+    type: 'Point',
+    coordinates: [req.body.location.location.lng, req.body.location.location.lat]
+  }
+  req.body['schedule'] = {
+    mon: 0,
+    tue: 0,
+    wed: 0,
+    thu: 0,
+    fri: 0,
+    sat: 0,
+    sun: 0,
+    lastModified: new Date()
+  }
+
+  const user = await userService.updateUserById(req.user._id, {account: newAccount, driveway: req.body});
+  res.send(user);
+})
+
 const addDrivewayToUser = catchAsync(async (req, res) => {
   const ObjectId = require('mongodb').ObjectId;
   console.log("Inside addDrivewayToUser");
@@ -750,4 +789,5 @@ module.exports = {
   accountLink,
   reportUser,
   registerUserAsDriver,
+  addDrivewayNoAccount,
 };
