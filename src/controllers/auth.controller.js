@@ -9,13 +9,20 @@ const redirect = catchAsync(async (req, res) => {
   res.redirect("myspot://home");
 });
 
+const passwordResetRedirect = catchAsync(async (req, res) => {
+  // console.log("token:", req.query.token);
+  // const redirectLink = `myspot://passwordReset/${req.query.token}`;
+  const redirectLink = `exp://192.168.0.62:19000/--/passwordReset/${req.query.token}`;
+  res.redirect(redirectLink);
+});
+
 const register = catchAsync(async (req, res) => {
-  console.log("register", req.body);
+  // console.log("register", req.body);
   const newUser = await userService.createUser(req.body);
   const tokens = await tokenService.generateAuthTokens(newUser);
   const { isEmailVerified, account, customer, password, ...user} = newUser.toObject();
-  console.log("user", newUser);
-  console.log("new user", user);
+  // console.log("user", newUser);
+  // console.log("new user", user);
   res.status(httpStatus.CREATED).send({ user, tokens });
 });
 
@@ -29,13 +36,13 @@ const login = catchAsync(async (req, res) => {
 });
 
 const logout = catchAsync(async (req, res) => {
-  console.log("logout", req.body);
+  // console.log("logout", req.body);
   await authService.logout(req.body.refreshToken);
   res.status(httpStatus.NO_CONTENT).send();
 });
 
 const refreshTokens = catchAsync(async (req, res) => {
-  console.log("refreshTokens", req.body);
+  // console.log("refreshTokens", req.body);
   const tokens = await authService.refreshAuth(req.body.refreshToken);
   res.send({ ...tokens });
 });
@@ -47,6 +54,7 @@ const forgotPassword = catchAsync(async (req, res) => {
 });
 
 const resetPassword = catchAsync(async (req, res) => {
+  // console.log("Inside pass reset:", req);
   await authService.resetPassword(req.query.token, req.body.password);
   res.status(httpStatus.NO_CONTENT).send();
 });
@@ -71,5 +79,6 @@ module.exports = {
   resetPassword,
   sendVerificationEmail,
   verifyEmail,
-  redirect
+  redirect,
+  passwordResetRedirect
 };

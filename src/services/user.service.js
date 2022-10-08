@@ -2,13 +2,14 @@ const httpStatus = require('http-status');
 const { User } = require('../models');
 const ApiError = require('../utils/ApiError');
 require('dotenv').config()
-console.log("dotenv:::", process.env.stripe_secret_key);
+// console.log("dotenv:::", process.env.stripe_secret_key);
 
 // Set your secret key. Remember to switch to your live secret key in production.
 // See your keys here: https://dashboard.stripe.com/apikeys
 // const stripe = require('stripe')('sk_test_51LZlAiBPaG0NtDBCYaZFxWwYX9HwjdH86FW69v12OUcABN57tYriwJtfiZVLoUQOhPsHf5hnIkUwA9ZNPqbOMtyv00cwMjjDC5');
-const stripe_secret_key = process.env.stripe_secret_key
-const stripe = require('stripe')(stripe_secret_key);
+const stripe_test_key = process.env.stripe_test_key;
+const stripe_secret_key = process.env.stripe_secret_key;
+const stripe = require('stripe')(stripe_test_key);
 /**
  * Create a user
  * @param {Object} userBody
@@ -21,7 +22,7 @@ const createUser = async (userBody) => {
   }
   const customer = await stripe.customers.create();
   userBody.customer = customer;
-  console.log("customer: ", customer);
+  // console.log("customer: ", customer);
   // const user = await userService.createUser(req.body);
   return User.create(userBody);
 };

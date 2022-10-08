@@ -15,6 +15,9 @@ router
 router
   .route('/register-driveway')
   .post(auth('blanket'), validate(drivewayValidation.registerDriveway), userController.addDrivewayToUser);
+router
+  .route('/add-driveway')
+  .post(auth('blanket'), validate(drivewayValidation.registerDriveway), userController.addDrivewayNoAccount);
 
   
 router
