@@ -15,7 +15,9 @@ const { errorConverter, errorHandler } = require('./middlewares/error');
 const ApiError = require('./utils/ApiError');
 const YOUR_DOMAIN = 'http://localhost:3000';
 const app = express();
-const stripe = require('stripe')('sk_test_Hrs6SAopgFPF0bZXSN3f6ELN');
+const stripe_secret_key = process.env.stripe_secret_key;
+// const stripe = require('stripe')('sk_test_Hrs6SAopgFPF0bZXSN3f6ELN');
+const stripe = require('stripe')(stripe_secret_live);
 
 if (config.env !== 'test') {
   app.use(morgan.successHandler);
@@ -36,7 +38,7 @@ app.post('/webhook', express.raw({type: 'application/json'}), (request, response
     response.status(400).send(`Webhook Error: ${err.message}`);
     return;
   }
-  console.log(`Incoming webhook event ${event.type}`);
+  // console.log(`Incoming webhook event ${event.type}`);
   let account;
   let application;
   let externalAccount;

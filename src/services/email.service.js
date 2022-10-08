@@ -33,8 +33,8 @@ const sendResetPasswordEmail = async (to, token) => {
   const subject = 'Reset password';
   // replace this url with the link to the reset password page of your front-end app
   // const resetPasswordUrl = `myspot://resetPassword?token=${token}`;
-  // const resetPasswordUrl = `https://myspot-back.herokuapp.com/v1/auth/password-reset-redirect?token=${token}`;
-  const resetPasswordUrl = `http://192.168.0.62:3000/v1/auth/password-reset-redirect?token=${token}`;
+  const resetPasswordUrl = `https://myspot-back.herokuapp.com/v1/auth/password-reset-redirect?token=${token}`;
+  // const resetPasswordUrl = `http://192.168.0.62:3000/v1/auth/password-reset-redirect?token=${token}`;
   // const resetPasswordUrl = `http://localhost:3000/v1/auth/password-reset-redirect?token=${token}`;
   // const resetPasswordUrl = `exp://192.168.0.62:19000/--/passwordReset/${token}`;
 

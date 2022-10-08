@@ -9,7 +9,7 @@ require('dotenv').config()
 // const stripe = require('stripe')('sk_test_51LZlAiBPaG0NtDBCYaZFxWwYX9HwjdH86FW69v12OUcABN57tYriwJtfiZVLoUQOhPsHf5hnIkUwA9ZNPqbOMtyv00cwMjjDC5');
 const stripe_test_key = process.env.stripe_test_key;
 const stripe_secret_key = process.env.stripe_secret_key;
-const stripe = require('stripe')(stripe_test_key);
+const stripe = require('stripe')(stripe_secret_key);
 /**
  * Create a user
  * @param {Object} userBody

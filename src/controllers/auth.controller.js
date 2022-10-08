@@ -11,8 +11,8 @@ const redirect = catchAsync(async (req, res) => {
 
 const passwordResetRedirect = catchAsync(async (req, res) => {
   // console.log("token:", req.query.token);
-  // const redirectLink = `myspot://passwordReset/${req.query.token}`;
-  const redirectLink = `exp://192.168.0.62:19000/--/passwordReset/${req.query.token}`;
+  const redirectLink = `myspot://passwordReset/${req.query.token}`;
+  // const redirectLink = `exp://192.168.0.62:19000/--/passwordReset/${req.query.token}`;
   res.redirect(redirectLink);
 });
 
