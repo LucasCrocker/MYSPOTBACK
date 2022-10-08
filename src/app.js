@@ -17,7 +17,7 @@ const YOUR_DOMAIN = 'http://localhost:3000';
 const app = express();
 const stripe_secret_key = process.env.stripe_secret_key;
 // const stripe = require('stripe')('sk_test_Hrs6SAopgFPF0bZXSN3f6ELN');
-const stripe = require('stripe')(stripe_secret_live);
+const stripe = require('stripe')(stripe_secret_key);
 
 if (config.env !== 'test') {
   app.use(morgan.successHandler);
