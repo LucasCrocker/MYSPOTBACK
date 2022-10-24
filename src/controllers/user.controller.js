@@ -667,7 +667,7 @@ const releaseDriveway = catchAsync(async (req, res) => {
   const serviceFee = 1;
   let now = moment(new Date());
   let paymentTotal = ( ((now.diff(bookedDate, 'minutes') * price / 60 ) + serviceFee) ).toFixed(2) * 100;
-
+  paymentTotal = ( paymentTotal > 500) ? 500 : paymentTotal
   try {
     const paymentIntent = await stripe.paymentIntents.create({
       amount: (paymentTotal),
